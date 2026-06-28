@@ -146,8 +146,8 @@ class HelpViewModel
         version.value = currentVersion
 
         val versionCode = BuildConfig.VERSION_CODE
-        val appGitDescribe = AppUtils.getString(R.string.linphone_app_version)
-        val appBranch = AppUtils.getString(R.string.linphone_app_branch)
+        val appGitDescribe = AppUtils.getString(R.string.kidstalk_app_version)
+        val appBranch = AppUtils.getString(R.string.kidstalk_app_branch)
         appVersion.value = "$versionCode - $appGitDescribe ($appBranch)"
 
         sdkVersion.value = coreContext.sdkVersion

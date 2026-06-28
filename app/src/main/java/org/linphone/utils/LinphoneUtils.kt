@@ -68,7 +68,7 @@ class LinphoneUtils {
 
         @AnyThread
         fun getRemoteProvisioningUrlFromUri(uri: String): String? {
-            val linphoneScheme = "linphone-config:"
+            val linphoneScheme = "kidstalk-config:"
             return if (uri.startsWith(linphoneScheme)) {
                 val remoteConfigUri = uri.substring(linphoneScheme.length)
                 val url = when {
