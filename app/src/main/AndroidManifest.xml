@@ -7,11 +7,10 @@
         android:required="false" />
 
     <uses-permission android:name="android.permission.INTERNET" />
-    <uses-permission android:name="android.permission.CAMERA" />
     <uses-permission android:name="android.permission.RECORD_AUDIO" />
+    <uses-permission android:name="android.permission.MODIFY_AUDIO_SETTINGS" />
 
     <!-- To be able to display contacts list & match calling/called numbers -->
-    <uses-permission android:name="android.permission.READ_CONTACTS" />
 
     <!-- Starting Android 13 we need to ask notification permission -->
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS"/>
@@ -273,6 +272,14 @@
                 android:resource="@xml/provider_paths" />
         </provider>
 
+    
+        <!-- Kids.Talk: supervised child calling setup -->
+        <activity
+            android:name="org.linphone.ui.setup.KidsTalkSetupActivity"
+            android:exported="true"
+            android:screenOrientation="portrait"
+            android:theme="@style/Theme.Linphone"
+            android:windowSoftInputMode="adjustResize" />
     </application>
 
 </manifest>

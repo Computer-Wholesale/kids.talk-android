@@ -14,7 +14,7 @@ plugins {
     alias(libs.plugins.navigation)
 }
 
-val packageName = "org.linphone"
+val packageName = "com.kidstalk.phone"
 val useDifferentPackageNameForDebugBuild = false
 
 val sdkPath = providers.gradleProperty("LinphoneSdkBuildDir").get()
@@ -106,8 +106,8 @@ android {
         applicationId = packageName
         minSdk = 28
         targetSdk = 37
-        versionCode = 602002 // 6.02.002
-        versionName = "6.3.0-alpha"
+        versionCode = 114 // 1.14
+        versionName = "1.14"
 
         manifestPlaceholders["appAuthRedirectScheme"] = packageName
 

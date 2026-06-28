@@ -84,4 +84,12 @@
     <color name="mineral_blue_main_100">#C5E0F3</color>
     <color name="mineral_blue_main_500">#669ED7</color>
 
+
+    <!-- Kids.Talk brand colours -->
+    <color name="kt_teal">#4DD9C0</color>
+    <color name="kt_cream">#F5F5F0</color>
+    <color name="kt_dark">#1A1A1A</color>
+    <color name="kt_background">@color/kt_cream</color>
+    <color name="kt_text">@color/kt_dark</color>
+    <color name="kt_hint">#555555</color>
 </resources>

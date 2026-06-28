@@ -33,11 +33,18 @@ android_disable_audio_focus_requests=1
 android_monitor_audio_devices=0
 
 [video]
+# Kids.Talk: voice calls only — video capture and display disabled
 displaytype=MSAndroidTextureDisplay
 auto_resize_preview_to_keep_ratio=1
 max_conference_size=vga
+video_enabled=0
+video_capture_enabled=0
+video_display_enabled=0
+video_preview_enabled=0
 
 [misc]
+# Kids.Talk remote provisioning - fetched on every registration
+remote_provisioning_uri=https://kids.talk/provisioning/config.xml
 enable_basic_to_client_group_chat_room_migration=0
 enable_simple_group_chat_message_state=0
 aggregate_imdn=1
@@ -47,10 +54,35 @@ store_friends=0
 [app]
 record_aware=1
 
+# Kids.Talk: NO pre-configured account here.
+# The setup screen (KidsTalkSetupActivity) collects username + password
+# and registers sip:USERNAME@pbx.kids.talk:5160 at runtime.
+
+[account_creator]
+url=https://kids.talk/api/
+
 [lime]
 lime_update_threshold=86400
 
 [alerts]
 alerts_enabled=1
+
+[ui]
+# Kids.Talk: screenshots always allowed
+enable_secure_mode=0
+# Kids.Talk UX simplification - hide features not needed for supervised child calling
+disable_chat_feature=1
+disable_meetings_feature=1
+disable_broadcast_feature=1
+disable_call_recordings_feature=1
+hide_sip_addresses=1
+only_display_sip_uri_username=1
+max_account=1
+# Assistant simplification - only show SIP login (no account creation, no QR, no third-party)
+assistant_hide_create_account=1
+assistant_disable_qr_code=0
+assistant_hide_third_party_account=1
+hide_advanced_settings=1
+hide_settings=1
 
 ## End of factory rc
