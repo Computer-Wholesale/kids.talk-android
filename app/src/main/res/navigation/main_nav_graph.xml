@@ -3,7 +3,14 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:id="@+id/main_nav_graph"
-    app:startDestination="@id/historyListFragment">
+    app:startDestination="@id/kidsTalkCallFragment">
+
+    <!-- ── Kids.Talk: single-contact call screen (KID-263) ──────────────── -->
+    <fragment
+        android:id="@+id/kidsTalkCallFragment"
+        android:name="org.linphone.ui.main.kidstalk.KidsTalkCallFragment"
+        android:label="KidsTalkCallFragment"
+        tools:layout="@layout/fragment_kidstalk_call" />
 
     <fragment
         android:id="@+id/contactsListFragment"

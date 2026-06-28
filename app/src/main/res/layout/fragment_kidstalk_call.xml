@@ -1,0 +1,157 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    Kids.Talk — Main Call Screen Layout
+    KID-263: Adds info icon (top-right) that opens KidsTalkAboutBottomSheet.
+    Brand: Neo-Brutalist — zero radius, 4px hard borders, Sunshine Yellow #FDDA24,
+           Grass Green #4E801F, Near-black #1A1A1A, Clean White #FFFFFF.
+-->
+<FrameLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@color/kt_sunshine_yellow">
+
+    <!-- ── Info / About icon (top-right corner) ─────────────────────────── -->
+    <ImageButton
+        android:id="@+id/info_button"
+        android:layout_width="48dp"
+        android:layout_height="48dp"
+        android:layout_gravity="top|end"
+        android:layout_margin="16dp"
+        android:background="@android:color/transparent"
+        android:src="@drawable/info"
+        android:tint="@color/kt_dark"
+        android:contentDescription="@string/kt_about_button_desc"
+        android:padding="8dp" />
+
+    <!-- ══════════════════════════════════════════════════════════════════════
+         CALL VIEW — shown when a contact has been configured
+    ═══════════════════════════════════════════════════════════════════════ -->
+    <LinearLayout
+        android:id="@+id/call_view"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:orientation="vertical"
+        android:gravity="center"
+        android:paddingHorizontal="32dp"
+        android:visibility="gone">
+
+        <!-- Contact name label -->
+        <TextView
+            android:id="@+id/contact_name_label"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:textSize="28sp"
+            android:textStyle="bold"
+            android:textColor="@color/kt_dark"
+            android:fontFamily="sans-serif-black"
+            android:gravity="center"
+            android:layout_marginBottom="40dp" />
+
+        <!-- Big green CALL button -->
+        <Button
+            android:id="@+id/call_button"
+            android:layout_width="match_parent"
+            android:layout_height="72dp"
+            android:text="@string/kt_call_button"
+            android:textSize="20sp"
+            android:textStyle="bold"
+            android:textColor="@color/bc_white"
+            android:backgroundTint="@color/kt_grass_green"
+            android:stateListAnimator="@null"
+            android:elevation="0dp"
+            android:layout_marginBottom="16dp" />
+
+        <!-- Change contact link -->
+        <Button
+            style="@style/Widget.MaterialComponents.Button.TextButton"
+            android:id="@+id/change_contact_button"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/kt_change_contact_button"
+            android:textColor="@color/kt_dark"
+            android:alpha="0.7" />
+
+    </LinearLayout>
+
+    <!-- ══════════════════════════════════════════════════════════════════════
+         SETUP VIEW — shown when no contact has been configured yet
+    ═══════════════════════════════════════════════════════════════════════ -->
+    <LinearLayout
+        android:id="@+id/setup_view"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:orientation="vertical"
+        android:gravity="center"
+        android:paddingHorizontal="32dp"
+        android:visibility="gone">
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/kt_setup_title"
+            android:textSize="22sp"
+            android:textStyle="bold"
+            android:textColor="@color/kt_dark"
+            android:fontFamily="sans-serif-black"
+            android:gravity="center"
+            android:layout_marginBottom="8dp" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/kt_setup_subtitle"
+            android:textSize="15sp"
+            android:textColor="@color/kt_dark"
+            android:alpha="0.7"
+            android:gravity="center"
+            android:layout_marginBottom="32dp" />
+
+        <!-- Name input -->
+        <com.google.android.material.textfield.TextInputLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:hint="@string/kt_setup_name_hint"
+            android:layout_marginBottom="16dp"
+            style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox">
+            <com.google.android.material.textfield.TextInputEditText
+                android:id="@+id/setup_name_input"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:inputType="textPersonName|textCapWords"
+                android:maxLines="1" />
+        </com.google.android.material.textfield.TextInputLayout>
+
+        <!-- Number input -->
+        <com.google.android.material.textfield.TextInputLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:hint="@string/kt_setup_number_hint"
+            android:layout_marginBottom="32dp"
+            style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox">
+            <com.google.android.material.textfield.TextInputEditText
+                android:id="@+id/setup_number_input"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:inputType="number"
+                android:maxLines="1" />
+        </com.google.android.material.textfield.TextInputLayout>
+
+        <!-- Save button -->
+        <Button
+            android:id="@+id/save_contact_button"
+            android:layout_width="match_parent"
+            android:layout_height="56dp"
+            android:text="@string/kt_save_contact_button"
+            android:textSize="16sp"
+            android:textStyle="bold"
+            android:textColor="@color/bc_white"
+            android:backgroundTint="@color/kt_grass_green"
+            android:stateListAnimator="@null"
+            android:elevation="0dp"
+            android:enabled="false" />
+
+    </LinearLayout>
+
+</FrameLayout>
