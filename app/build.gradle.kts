@@ -157,8 +157,8 @@ android {
             val appVersion = gitVersion
             val appBranch = gitBranch
             println("Debug flavor app version is [$appVersion], app branch is [$appBranch]")
-            resValue("string", "linphone_app_version", appVersion)
-            resValue("string", "linphone_app_branch", appBranch)
+            resValue("string", "kidstalk_app_version", appVersion)
+            resValue("string", "kidstalk_app_branch", appBranch)
             if (useDifferentPackageNameForDebugBuild) {
                 resValue("string", "file_provider", "$packageName.debug.fileprovider")
             } else {
@@ -188,8 +188,8 @@ android {
             val appVersion = gitVersion
             val appBranch = gitBranch
             println("Release flavor app version is [$appVersion], app branch is [$appBranch]")
-            resValue("string", "linphone_app_version", appVersion)
-            resValue("string", "linphone_app_branch", appBranch)
+            resValue("string", "kidstalk_app_version", appVersion)
+            resValue("string", "kidstalk_app_branch", appBranch)
             resValue("string", "file_provider", "$packageName.fileprovider")
             resValue("string", "linphone_openid_callback_scheme", packageName)
 
