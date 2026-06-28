@@ -1074,4 +1074,34 @@
     <string name="managed_xml_config_description" translatable="false">Raw XML provisioning content applied on startup.</string>
     <string name="managed_root_ca_title" translatable="false">Root CA certificate</string>
     <string name="managed_root_ca_description" translatable="false">PEM-encoded root certificate(s) used to validate TLS connections.</string>
+
+    <!-- ══════════════════════════════════════════════════════════════════════
+         Kids.Talk — UI Strings (KID-262 / KID-263 / KID-270)
+         Privacy rule: no child-identifying language. Use Household / Guardian.
+    ═══════════════════════════════════════════════════════════════════════ -->
+
+    <!-- Call screen (KID-263) -->
+    <string name="kt_call_button">CALL</string>
+    <string name="kt_change_contact_button">Change contact</string>
+    <string name="kt_about_button_desc">About Kids.Talk</string>
+    <string name="kt_contact_saved">Contact saved</string>
+    <string name="kt_call_failed">Could not start call. Please check your connection.</string>
+
+    <!-- Setup form (KID-263) -->
+    <string name="kt_setup_title">Set up your contact</string>
+    <string name="kt_setup_subtitle">Enter the name and number of the person you want to call.</string>
+    <string name="kt_setup_name_hint">Contact name</string>
+    <string name="kt_setup_number_hint">Extension number (4–10 digits)</string>
+    <string name="kt_save_contact_button">SAVE CONTACT</string>
+
+    <!-- About / Support bottom sheet (KID-270) -->
+    <string name="kt_about_title">Kids.Talk</string>
+    <string name="kt_about_version_label">Version</string>
+    <string name="kt_about_support_label">Support</string>
+    <string name="kt_about_support_url" translatable="false">https://www.kids.talk/support</string>
+    <string name="kt_about_manage_account_label">Manage account</string>
+    <string name="kt_about_manage_account_url" translatable="false">https://www.kids.talk/account/manage</string>
+    <string name="kt_about_licenses_label">Open-source licences</string>
+    <string name="kt_about_close_button">CLOSE</string>
+
 </resources>

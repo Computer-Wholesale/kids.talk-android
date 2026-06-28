@@ -3,6 +3,8 @@
  *
  * Shows a big "Call" button for the one pre-configured contact.
  * If no contact has been saved yet, shows a setup form instead.
+ *
+ * KID-263: Info icon (top-right) opens KidsTalkAboutBottomSheet.
  */
 package org.linphone.ui.main.kidstalk
 
@@ -16,6 +18,7 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.Button
 import android.widget.EditText
+import android.widget.ImageButton
 import android.widget.LinearLayout
 import android.widget.TextView
 import android.widget.Toast
@@ -39,6 +42,7 @@ class KidsTalkCallFragment : Fragment() {
     private lateinit var setupNameInput: EditText
     private lateinit var setupNumberInput: EditText
     private lateinit var saveContactButton: Button
+    private lateinit var infoButton: ImageButton
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -57,6 +61,7 @@ class KidsTalkCallFragment : Fragment() {
         setupNameInput = view.findViewById(R.id.setup_name_input)
         setupNumberInput = view.findViewById(R.id.setup_number_input)
         saveContactButton = view.findViewById(R.id.save_contact_button)
+        infoButton = view.findViewById(R.id.info_button)
 
         // Live validation on setup form
         val watcher = object : TextWatcher {
@@ -72,6 +77,12 @@ class KidsTalkCallFragment : Fragment() {
         saveContactButton.setOnClickListener { saveContact() }
         callButton.setOnClickListener { placeCall() }
         changeContactButton.setOnClickListener { showSetupView() }
+
+        // KID-263: info icon opens the About / Support bottom sheet (KID-270)
+        infoButton.setOnClickListener {
+            KidsTalkAboutBottomSheet()
+                .show(parentFragmentManager, KidsTalkAboutBottomSheet.TAG)
+        }
 
         refresh()
     }
