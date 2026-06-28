@@ -1,0 +1,121 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    Kids.Talk — About / Support Bottom Sheet
+    KID-270: Neo-Brutalist style — zero radius, 4px hard borders, hard shadow.
+    Brand palette: Sunshine Yellow #FDDA24, Grass Green #4E801F, Near-black #1A1A1A.
+-->
+<LinearLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical"
+    android:background="@color/bc_white"
+    android:paddingHorizontal="24dp"
+    android:paddingTop="24dp"
+    android:paddingBottom="32dp">
+
+    <!-- ── Header bar ──────────────────────────────────────────────────────── -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:gravity="center_vertical"
+        android:layout_marginBottom="24dp">
+
+        <TextView
+            android:id="@+id/about_title"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="@string/kt_about_title"
+            android:textSize="22sp"
+            android:textStyle="bold"
+            android:textColor="@color/kt_dark"
+            android:fontFamily="sans-serif-black" />
+
+        <!-- Version badge -->
+        <TextView
+            android:id="@+id/about_version"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:background="@color/kt_sunshine_yellow"
+            android:paddingHorizontal="10dp"
+            android:paddingVertical="4dp"
+            android:textSize="12sp"
+            android:textStyle="bold"
+            android:textColor="@color/kt_dark"
+            android:fontFamily="monospace" />
+
+    </LinearLayout>
+
+    <!-- ── Divider ─────────────────────────────────────────────────────────── -->
+    <View
+        android:layout_width="match_parent"
+        android:layout_height="4dp"
+        android:background="@color/kt_dark"
+        android:layout_marginBottom="20dp" />
+
+    <!-- ── Support row ────────────────────────────────────────────────────── -->
+    <TextView
+        android:id="@+id/about_support_link"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="@string/kt_about_support_label"
+        android:textSize="16sp"
+        android:textColor="@color/kt_grass_green"
+        android:textStyle="bold"
+        android:paddingVertical="12dp"
+        android:background="?attr/selectableItemBackground"
+        android:clickable="true"
+        android:focusable="true" />
+
+    <!-- ── Manage account row ─────────────────────────────────────────────── -->
+    <TextView
+        android:id="@+id/about_manage_account_link"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="@string/kt_about_manage_account_label"
+        android:textSize="16sp"
+        android:textColor="@color/kt_grass_green"
+        android:textStyle="bold"
+        android:paddingVertical="12dp"
+        android:background="?attr/selectableItemBackground"
+        android:clickable="true"
+        android:focusable="true" />
+
+    <!-- ── Open-source licences row ───────────────────────────────────────── -->
+    <TextView
+        android:id="@+id/about_licenses_link"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="@string/kt_about_licenses_label"
+        android:textSize="16sp"
+        android:textColor="@color/kt_grass_green"
+        android:textStyle="bold"
+        android:paddingVertical="12dp"
+        android:background="?attr/selectableItemBackground"
+        android:clickable="true"
+        android:focusable="true" />
+
+    <!-- ── Divider ─────────────────────────────────────────────────────────── -->
+    <View
+        android:layout_width="match_parent"
+        android:layout_height="4dp"
+        android:background="@color/kt_dark"
+        android:layout_marginTop="8dp"
+        android:layout_marginBottom="20dp" />
+
+    <!-- ── CLOSE button ───────────────────────────────────────────────────── -->
+    <Button
+        android:id="@+id/about_close_button"
+        android:layout_width="match_parent"
+        android:layout_height="56dp"
+        android:text="@string/kt_about_close_button"
+        android:textSize="16sp"
+        android:textStyle="bold"
+        android:textColor="@color/bc_white"
+        android:backgroundTint="@color/kt_dark"
+        android:stateListAnimator="@null"
+        android:elevation="0dp" />
+
+</LinearLayout>

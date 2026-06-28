@@ -92,4 +92,10 @@
     <color name="kt_background">@color/kt_cream</color>
     <color name="kt_text">@color/kt_dark</color>
     <color name="kt_hint">#555555</color>
+
+    <!-- Kids.Talk v2 brand palette (Brand Guidelines v2.0 — Pantone-referenced) -->
+    <color name="kt_sunshine_yellow">#FDDA24</color><!-- Pantone 115 C -->
+    <color name="kt_grass_green">#4E801F</color><!-- Pantone 2278 C -->
+    <color name="kt_bubblegum_pink">#FCC8D3</color><!-- Pantone 706 U -->
+    <color name="kt_sky_blue">#99D6EA</color><!-- Pantone 2975 C -->
 </resources>

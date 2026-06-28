@@ -12,6 +12,7 @@ plugins {
     alias(libs.plugins.ktlint)
     alias(libs.plugins.jetbrainsKotlinAndroid)
     alias(libs.plugins.navigation)
+    alias(libs.plugins.ossLicenses) // Kids.Talk: KID-270 in-app OSS licenses screen
 }
 
 val packageName = "com.kidstalk.phone"
@@ -257,6 +258,9 @@ dependencies {
     } else {
         compileOnly(libs.google.firebase.crashlytics)
     }
+
+    // https://developers.google.com/android/guides/opensource Apache v2.0
+    implementation(libs.google.oss.licenses) // Kids.Talk: KID-270 in-app OSS licenses screen
 
     // https://github.com/coil-kt/coil/blob/main/LICENSE.txt Apache v2.0
     implementation(libs.coil)
