@@ -26,7 +26,7 @@
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE"/>
     <!-- Needed for Android 14
     https://developer.android.com/about/versions/14/behavior-changes-14#fgs-types -->
-    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_CAMERA" />
+    <!-- KID-282: FOREGROUND_SERVICE_CAMERA removed — Kids.Talk is voice-only, no camera FGS required -->
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE_MICROPHONE" />
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE_PHONE_CALL" />
     <!-- Required for foreground service started when a push is being received,
@@ -175,7 +175,7 @@
         <service
             android:name=".core.CoreInCallService"
             android:exported="false"
-            android:foregroundServiceType="phoneCall|camera|microphone"
+            android:foregroundServiceType="phoneCall|microphone"
             android:stopWithTask="false"
             android:label="@string/app_name" />
 

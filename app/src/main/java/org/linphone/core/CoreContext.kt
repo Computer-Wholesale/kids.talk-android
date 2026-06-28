@@ -644,8 +644,8 @@ class CoreContext
         }
         Log.i("=========================================")
         Log.i("==== Linphone-android information dump ====")
-        val gitVersion = AppUtils.getString(org.linphone.R.string.linphone_app_version)
-        val gitBranch = AppUtils.getString(org.linphone.R.string.linphone_app_branch)
+        val gitVersion = AppUtils.getString(org.linphone.R.string.kidstalk_app_version)
+        val gitBranch = AppUtils.getString(org.linphone.R.string.kidstalk_app_branch)
         Log.i("VERSION=${BuildConfig.VERSION_NAME} / ${BuildConfig.VERSION_CODE} ($gitVersion from $gitBranch branch)")
         Log.i("PACKAGE=${BuildConfig.APPLICATION_ID}")
         Log.i("BUILD TYPE=${BuildConfig.BUILD_TYPE}")
