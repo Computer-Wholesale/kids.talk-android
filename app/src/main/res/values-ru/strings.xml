@@ -230,7 +230,6 @@
     <string name="account_settings_conference_factory_uri_title">URI фабрики конференции</string>
     <string name="settings_contacts_carddav_mandatory_field_not_filled_toast">Пожалуйста, заполните как минимум отображаемое имя и URL-адрес сервера</string>
     <string name="settings_tunnel_second_host_label">Второй хост</string>
-    <string name="settings_advanced_print_logs_crashlytics_title">Помогите разработчикам устранить неполадки, отправив журналы в Crashlytics после сбоя</string>
     <string name="settings_advanced_logs_upload_server_url">URL сервера обмена журналами</string>
     <string name="settings_advanced_input_audio_device_title">Аудиоустройство ввода по умолчанию</string>
     <string name="settings_contacts_ldap_name_attributes_title">Атрибуты имени</string>

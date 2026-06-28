@@ -39,7 +39,6 @@ import androidx.annotation.UiThread
 import androidx.annotation.WorkerThread
 import androidx.core.text.isDigitsOnly
 import androidx.lifecycle.MutableLiveData
-import com.google.firebase.crashlytics.FirebaseCrashlytics
 import kotlin.system.exitProcess
 import org.linphone.BuildConfig
 import org.linphone.LinphoneApplication.Companion.coreContext
@@ -570,8 +569,6 @@ class CoreContext
 
     private var logcatEnabled: Boolean = corePreferences.printLogsInLogcat
 
-    private var crashlyticsEnabled: Boolean = corePreferences.sendLogsToCrashlytics
-    private var crashlyticsAvailable = BuildConfig.CRASHLYTICS_ENABLED
 
     private val loggingServiceListener = object : LoggingServiceListenerStub() {
         @WorkerThread
@@ -590,9 +587,6 @@ class CoreContext
                     else -> android.util.Log.d(domain, message)
                 }
             }
-            if (crashlyticsAvailable && crashlyticsEnabled) {
-                FirebaseCrashlytics.getInstance().log("[$domain] [${level.name}] $message")
-            }
         }
     }
 
@@ -605,20 +599,7 @@ class CoreContext
         Log.i("$TAG Creating Core")
         Looper.prepare()
 
-        if (BuildConfig.CRASHLYTICS_ENABLED) {
-            Log.i("$TAG Crashlytics is enabled, registering logging service listener")
-            try {
-                FirebaseCrashlytics.getInstance()
-                Factory.instance().loggingService.addListener(loggingServiceListener)
-            } catch (e: Exception) {
-                Log.e("$TAG Failed to instantiate Crashlytics: $e")
-                crashlyticsEnabled = false
-                crashlyticsAvailable = false
-            }
-        } else {
-            Log.i("$TAG Crashlytics is disabled")
-            crashlyticsAvailable = false
-        }
+        Factory.instance().loggingService.addListener(loggingServiceListener)
         Log.i("=========================================")
         Log.i("==== Linphone-android information dump ====")
         val gitVersion = AppUtils.getString(org.linphone.R.string.linphone_app_version)
@@ -1250,20 +1231,12 @@ class CoreContext
         corePreferences.clearPreviousGrammars()
     }
 
-    @WorkerThread
-    fun isCrashlyticsAvailable(): Boolean {
-        return crashlyticsAvailable
-    }
 
     @WorkerThread
     fun updateLogcatEnabledSetting(enabled: Boolean) {
         logcatEnabled = enabled
     }
 
-    @WorkerThread
-    fun updateCrashlyticsEnabledSetting(enabled: Boolean) {
-        crashlyticsEnabled = enabled
-    }
 
     @UiThread
     fun enableProximitySensor(enable: Boolean) {

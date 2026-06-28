@@ -824,7 +824,6 @@
     <string name="manage_account_e2e_encrypted_mode_default_summary">Tento režim zajišťuje důvěrnost vašich dat. Naše technologie koncového šifrování poskytuje nejvyšší úroveň zabezpečení pro vaši komunikaci.</string>
     <string name="conversation_dialog_open_or_export_file_message">&appName; nemůže soubor otevřít.\n\nPřejete si jej otevřít v jiné aplikaci (pokud to bude možné) nebo jej exportovat do vašeho zařízení?</string>
     <string name="meeting_failed_to_edit_schedule_toast">Úprava schůzky selhala!</string>
-    <string name="settings_advanced_print_logs_crashlytics_title">Pomozte vývojářům řešit problémy odesláním protokolů do Crashlytics po pádu</string>
     <string name="settings_advanced_logs_upload_server_url">Adresa URL serveru pro sdílení logů</string>
     <string name="contacts_list_sip_empty">Momentálně žádný SIP kontakt…</string>
     <string name="contacts_change_filter_label">Změnit filtr</string>

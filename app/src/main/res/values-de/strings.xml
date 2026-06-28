@@ -788,7 +788,6 @@
     <string name="settings_security_enable_vfs_failure_toast">Verschlüsselungsmoduls Aktivieren fehlgeschlagen!</string>
     <string name="settings_security_enable_vfs_success_toast">Verschlüsselungsmodul aktiviert</string>
     <string name="settings_security_enable_vfs_dialog_confirmation_title">Möchten Sie wirklich alles verschlüsseln?</string>
-    <string name="settings_advanced_print_logs_crashlytics_title">Helfen Sie Entwicklern bei der Fehlerbehebung, indem Sie nach einem Absturz Protokolle an Crashlytics senden</string>
     <string name="settings_advanced_logs_upload_server_url">Server-URL für die Protokollfreigabe</string>
     <string name="settings_advanced_use_smff_format_for_call_recordings_title">Videoanrufe mit H265/AV1 aufzeichnen</string>
     <string name="settings_advanced_create_e2e_encrypted_conferences_title">Erstellen Sie Ende-zu-Ende-verschlüsselte Meetings und Gruppenanrufe</string>

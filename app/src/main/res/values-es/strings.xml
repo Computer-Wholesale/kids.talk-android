@@ -215,7 +215,6 @@
     <string name="settings_advanced_enable_auto_answer_incoming_calls_title">Respuesta automática de las llamadas entrantes</string>
     <string name="settings_user_interface_title">Interfaz de usuario</string>
     <string name="settings_tunnel_dual_mode_label">Utilice dos servidores</string>
-    <string name="settings_advanced_print_logs_crashlytics_title">Ayuda a los desarrolladores a solucionar problemas enviando registros a Crashlytics después de un bloqueo</string>
     <string name="settings_advanced_use_smff_format_for_call_recordings_title">Graba videollamadas usando H265/AV1</string>
     <string name="settings_advanced_ring_during_early_media_title">Suena durante las primeras llamadas entrantes</string>
     <string name="settings_meetings_title">Reuniones</string>

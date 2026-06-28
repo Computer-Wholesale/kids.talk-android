@@ -283,7 +283,6 @@
     <string name="settings_contacts_ldap_min_characters_title">Minimale aantal tekens om een query te starten</string>
     <string name="settings_contacts_ldap_name_attributes_title">Naam-attributen</string>
     <string name="settings_contacts_ldap_sip_domain_title">SIP-domein</string>
-    <string name="settings_advanced_print_logs_crashlytics_title">Help ontwikkelaars bij het oplossen van problemen door logbestanden naar Crashlytics te sturen na een crash</string>
     <string name="settings_advanced_audio_codecs_title">Audiocodecs</string>
     <string name="settings_advanced_go_to_android_app_settings_title">Android-instellingen van &appName;</string>
     <string name="manage_account_e2e_encrypted_mode_default_title">Eind-tot-eind versleutelde modus</string>

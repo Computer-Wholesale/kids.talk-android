@@ -221,8 +221,6 @@ class SettingsViewModel
     // Advanced settings
     val showAdvancedSettings = MutableLiveData<Boolean>()
 
-    val sendLogsToCrashlytics = MutableLiveData<Boolean>()
-    val isCrashlyticsAvailable = MutableLiveData<Boolean>()
     val startAtBoot = MutableLiveData<Boolean>()
     val keepAliveThirdPartyAccountsService = MutableLiveData<Boolean>()
     val useSmffForCallRecording = MutableLiveData<Boolean>()
@@ -292,8 +290,6 @@ class SettingsViewModel
             core.addListener(coreListener)
 
             isTunnelAvailable.postValue(core.tunnelAvailable())
-            isCrashlyticsAvailable.postValue(coreContext.isCrashlyticsAvailable())
-
             showConversationsSettings.postValue(!corePreferences.disableChat)
             showMeetingsSettings.postValue(!corePreferences.disableMeetings)
             ldapAvailable.postValue(core.ldapAvailable())
@@ -381,7 +377,6 @@ class SettingsViewModel
                 setupTunnel()
             }
 
-            sendLogsToCrashlytics.postValue(corePreferences.sendLogsToCrashlytics)
             startAtBoot.postValue(corePreferences.autoStart)
             keepAliveThirdPartyAccountsService.postValue(corePreferences.keepServiceAlive)
 
@@ -842,16 +837,7 @@ class SettingsViewModel
         }
     }
 
-    @UiThread
-    fun toggleSendLogsToCrashlytics() {
-        val newValue = sendLogsToCrashlytics.value == false
-
-        coreContext.postOnCoreThread {
-            corePreferences.sendLogsToCrashlytics = newValue
-            sendLogsToCrashlytics.postValue(newValue)
-            coreContext.updateCrashlyticsEnabledSetting(newValue)
-        }
-    }
+    
 
     @UiThread
     fun toggleStartAtBoot() {
