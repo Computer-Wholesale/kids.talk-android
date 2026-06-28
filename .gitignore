@@ -12,3 +12,10 @@ app/release/
 .idea/
 app/bc-android.keystore
 .kotlin/
+
+# Kids.Talk: secrets — never commit these
+app/google-services.json
+keystore.properties
+*.jks
+*.keystore
+
