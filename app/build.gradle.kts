@@ -136,16 +136,22 @@ android {
 
     signingConfigs {
         create("release") {
-            val keyStorePath = keystoreProperties["storeFile"] as String
-            val keyStore = project.file(keyStorePath)
-            if (keyStore.exists()) {
-                storeFile = keyStore
-                storePassword = keystoreProperties["storePassword"] as String
-                keyAlias = keystoreProperties["keyAlias"] as String
-                keyPassword = keystoreProperties["keyPassword"] as String
-                println("Signing config release is using keystore [$storeFile]")
+            // KID-267: use null-safe casts so a clean clone (empty Properties) does not throw
+            // TypeCastException at Gradle configure time. Skip signing config when blank.
+            val keyStorePath = keystoreProperties["storeFile"] as? String ?: ""
+            if (keyStorePath.isNotBlank()) {
+                val keyStore = project.file(keyStorePath)
+                if (keyStore.exists()) {
+                    storeFile = keyStore
+                    storePassword = keystoreProperties["storePassword"] as? String ?: ""
+                    keyAlias = keystoreProperties["keyAlias"] as? String ?: ""
+                    keyPassword = keystoreProperties["keyPassword"] as? String ?: ""
+                    println("Signing config release is using keystore [$storeFile]")
+                } else {
+                    println("Keystore [$keyStorePath] doesn't exist!")
+                }
             } else {
-                println("Keystore [$storeFile] doesn't exists!")
+                println("No keystore.properties found — release build will be unsigned (CI/operator must supply keystore.properties)")
             }
         }
     }
