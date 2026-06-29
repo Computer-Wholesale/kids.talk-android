@@ -128,7 +128,11 @@ android {
 
     val keystorePropertiesFile = rootProject.file("keystore.properties")
     val keystoreProperties = Properties()
-    keystoreProperties.load(FileInputStream(keystorePropertiesFile))
+    // KID-267: guard the load so a clean clone (no keystore.properties) does not throw
+    // FileNotFoundException at Gradle configure time and break the debug/GPL build path.
+    if (keystorePropertiesFile.exists()) {
+        keystoreProperties.load(FileInputStream(keystorePropertiesFile))
+    }
 
     signingConfigs {
         create("release") {
