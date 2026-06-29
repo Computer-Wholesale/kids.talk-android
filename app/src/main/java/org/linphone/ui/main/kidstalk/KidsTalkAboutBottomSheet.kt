@@ -46,6 +46,11 @@ class KidsTalkAboutBottomSheet : BottomSheetDialogFragment() {
         view.findViewById<TextView>(R.id.about_version).text =
             getString(R.string.kt_about_version_label) + " " + BuildConfig.VERSION_NAME
 
+        // ── Privacy Policy link ──────────────────────────────────────────────
+        view.findViewById<TextView>(R.id.about_privacy_link).setOnClickListener {
+            openUrl(getString(R.string.kt_about_privacy_url))
+        }
+
         // ── Support link ─────────────────────────────────────────────────────
         view.findViewById<TextView>(R.id.about_support_link).setOnClickListener {
             openUrl(getString(R.string.kt_about_support_url))
