@@ -33,8 +33,8 @@
 
     <string name="website_contact_url" translatable="false">https://www.kids.talk/contact</string>
     <string name="website_download_url" translatable="false">https://www.kids.talk</string>
-    <string name="website_user_guide_url" translatable="false">https://kids.talk/help</string>
-    <string name="website_privacy_policy_url" translatable="false">https://kids.talk/privacy</string>
+    <string name="website_user_guide_url" translatable="false">https://www.kids.talk/help</string>
+    <string name="website_privacy_policy_url" translatable="false">https://www.kids.talk/privacy-policy</string>
     <string name="website_terms_and_conditions_url" translatable="false">https://www.kids.talk/terms</string>
     <string name="web_platform_register_email_url" translatable="false">https://www.kids.talk/register</string>
     <string name="web_platform_forgotten_password_url" translatable="false">https://www.kids.talk/account/manage</string>
