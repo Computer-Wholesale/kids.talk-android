@@ -85,11 +85,19 @@
     <color name="mineral_blue_main_500">#669ED7</color>
 
 
-    <!-- Kids.Talk brand colours -->
+    <!-- Kids.Talk brand colours (Brand Guidelines v2.0 / Pantone-referenced) -->
     <color name="kt_teal">#4DD9C0</color>
     <color name="kt_cream">#F5F5F0</color>
     <color name="kt_dark">#1A1A1A</color>
     <color name="kt_background">@color/kt_cream</color>
     <color name="kt_text">@color/kt_dark</color>
     <color name="kt_hint">#555555</color>
+    <!-- Primary: Sunshine Yellow (Pantone 115 C) -->
+    <color name="kt_sunshine_yellow">#FDDA24</color>
+    <!-- Secondary: Grass Green (Pantone 2278 C) -->
+    <color name="kt_grass_green">#4E801F</color>
+    <!-- Accent 1: Bubblegum Pink (Pantone 706 U) -->
+    <color name="kt_bubblegum_pink">#FCC8D3</color>
+    <!-- Accent 2: Sky Blue (Pantone 2975 C) -->
+    <color name="kt_sky_blue">#99D6EA</color>
 </resources>
