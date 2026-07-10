@@ -1,8 +1,13 @@
 <?xml version="1.0" encoding="utf-8"?>
+<!--
+    Kids.Talk Neo-Brutalist card border.
+    Brand Guidelines v2.0: border 4px solid #1A1A1A, radius 0.
+    KID-270: corrected from 2dp/12dp radius to 4dp/0 radius.
+-->
 <shape xmlns:android="http://schemas.android.com/apk/res/android"
     android:shape="rectangle">
     <stroke
-        android:width="2dp"
-        android:color="@color/kt_text" />
-    <corners android:radius="12dp" />
+        android:width="4dp"
+        android:color="@color/kt_dark" />
+    <!-- Zero border radius — Neo-Brutalist style, no exceptions -->
 </shape>

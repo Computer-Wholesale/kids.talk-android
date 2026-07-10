@@ -1074,4 +1074,18 @@
     <string name="managed_xml_config_description" translatable="false">Raw XML provisioning content applied on startup.</string>
     <string name="managed_root_ca_title" translatable="false">Root CA certificate</string>
     <string name="managed_root_ca_description" translatable="false">PEM-encoded root certificate(s) used to validate TLS connections.</string>
+
+    <!-- Kids.Talk About screen strings (KID-270) -->
+    <string name="kt_about_title" translatable="false">Kids.Talk</string>
+    <string name="kt_about_version_label" translatable="false">Version</string>
+    <string name="kt_about_support_label">Get Support</string>
+    <string name="kt_about_support_url" translatable="false">https://www.kids.talk/support</string>
+    <string name="kt_about_manage_account_label">Manage or Delete Account</string>
+    <string name="kt_about_manage_account_url" translatable="false">https://www.kids.talk/account/manage</string>
+    <string name="kt_about_privacy_label">Privacy Policy</string>
+    <string name="kt_about_privacy_url" translatable="false">https://www.kids.talk/privacy-policy</string>
+    <string name="kt_about_licenses_label">Open-Source Licences</string>
+    <string name="kt_about_close_button">CLOSE</string>
+    <!-- GPL-3.0 attribution — allowlisted in KID-262 branding guard (contains Linphone/Belledonne) -->
+    <string name="kt_about_attribution" translatable="false">Built on Linphone Android \u00b7 \u00a9 Belledonne Communications \u00b7 GPL-3.0 \u00b7 source: github.com/Computer-Wholesale/kids.talk-android</string>
 </resources>
