@@ -1131,4 +1131,10 @@
     <string name="kt_contact_change_auth_subtitle">Use this device\'s screen lock to change the household contact.</string>
     <string name="kt_contact_change_unprotected_notice">This device has no screen lock. The household contact can be changed now.</string>
     <string name="kt_contact_change_cancelled">Contact change was cancelled.</string>
+    <string name="kt_contact_save_failed">Unable to save contact.</string>
+    <string name="kt_call_not_ready">Your account is not ready to place a call.</string>
+    <string name="managed_contact_name_title" translatable="false">Managed household contact name</string>
+    <string name="managed_contact_name_description" translatable="false">Name of the centrally managed household contact.</string>
+    <string name="managed_contact_extension_title" translatable="false">Managed household contact extension</string>
+    <string name="managed_contact_extension_description" translatable="false">Six-digit extension of the centrally managed household contact.</string>
 </resources>

@@ -13,6 +13,24 @@ object KidsTalkContactPolicy {
     fun isValidExtension(value: String): Boolean = extensionPattern.matches(value)
 }
 
+/** A validated household contact usable by the fixed internal SIP endpoint. */
+data class KidsTalkContact(val name: String, val extension: String)
+
+/** The effective contact and whether managed configuration makes it immutable locally. */
+data class ResolvedKidsTalkContact(val contact: KidsTalkContact, val isManaged: Boolean)
+
+/** Managed configuration is authoritative; local encrypted data is the fallback only. */
+object KidsTalkContactResolver {
+    fun resolve(
+        managed: KidsTalkContact?,
+        local: KidsTalkContact?
+    ): ResolvedKidsTalkContact? = when {
+        managed != null -> ResolvedKidsTalkContact(managed, isManaged = true)
+        local != null -> ResolvedKidsTalkContact(local, isManaged = false)
+        else -> null
+    }
+}
+
 /**
  * Fixed SIP endpoint for this build. Transport configuration remains in the registration flow.
  */

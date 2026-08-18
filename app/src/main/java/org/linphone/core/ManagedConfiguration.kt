@@ -34,6 +34,8 @@ object ManagedConfiguration {
     const val KEY_CONFIG_URI = "configUri"
     const val KEY_XML_CONFIG = "xmlConfig"
     const val KEY_ROOT_CA = "rootCa"
+    const val KEY_CONTACT_NAME = "managedContactName"
+    const val KEY_CONTACT_EXTENSION = "managedContactExtension"
 
     @WorkerThread
     fun getRestrictions(context: Context): Bundle? {
