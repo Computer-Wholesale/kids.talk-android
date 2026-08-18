@@ -52,6 +52,7 @@
         <ImageView
             style="@style/icon_main_top_bar_button_style"
             android:id="@+id/drawer_menu"
+            android:visibility="gone"
             android:onClick="@{() -> viewModel.openDrawerMenu()}"
             android:layout_width="wrap_content"
             android:layout_height="0dp"
@@ -62,6 +63,7 @@
             app:layout_constraintBottom_toBottomOf="parent" />
 
         <include
+            android:visibility="gone"
             android:id="@+id/avatar"
             android:onClick="@{() -> viewModel.openDrawerMenu()}"
             android:layout_width="wrap_content"

@@ -45,6 +45,20 @@ class ShortcutUtils {
     companion object {
         private const val TAG = "[Shortcut Utils]"
 
+        /** Disables prior conversation shortcuts after the single-contact product transition. */
+        @WorkerThread
+        fun disableConversationShortcuts(context: Context) {
+            val flags = ShortcutManagerCompat.FLAG_MATCH_DYNAMIC or
+                ShortcutManagerCompat.FLAG_MATCH_PINNED or
+                ShortcutManagerCompat.FLAG_MATCH_CACHED
+            val ids = ShortcutManagerCompat.getShortcuts(context, flags).map { it.id }.distinct()
+            if (ids.isNotEmpty()) {
+                ShortcutManagerCompat.disableShortcuts(context, ids, null)
+                ShortcutManagerCompat.removeDynamicShortcuts(context, ids)
+                ShortcutManagerCompat.removeLongLivedShortcuts(context, ids)
+            }
+        }
+
         @WorkerThread
         fun removeShortcutToChatRoom(chatRoom: ChatRoom) {
             val id = LinphoneUtils.getConversationId(chatRoom)
