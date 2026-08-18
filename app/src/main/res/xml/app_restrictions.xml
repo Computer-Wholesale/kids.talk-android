@@ -22,4 +22,18 @@
         android:restrictionType="string"
         android:defaultValue="" />
 
+    <restriction
+        android:key="managedContactName"
+        android:title="@string/managed_contact_name_title"
+        android:description="@string/managed_contact_name_description"
+        android:restrictionType="string"
+        android:defaultValue="" />
+
+    <restriction
+        android:key="managedContactExtension"
+        android:title="@string/managed_contact_extension_title"
+        android:description="@string/managed_contact_extension_description"
+        android:restrictionType="string"
+        android:defaultValue="" />
+
 </restrictions>
