@@ -39,6 +39,7 @@ class KidsTalkCallFragment : Fragment() {
     private lateinit var setupNameInput: EditText
     private lateinit var setupNumberInput: EditText
     private lateinit var saveContactButton: Button
+    private lateinit var credentialGate: AndroidDeviceCredentialGate
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -58,6 +59,7 @@ class KidsTalkCallFragment : Fragment() {
         setupNumberInput = view.findViewById(R.id.setup_number_input)
         saveContactButton = view.findViewById(R.id.save_contact_button)
 
+        credentialGate = AndroidDeviceCredentialGate(this, ::onContactChangeAuthorization)
         // Live validation on setup form
         val watcher = object : TextWatcher {
             override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
@@ -70,7 +72,7 @@ class KidsTalkCallFragment : Fragment() {
         setupNumberInput.addTextChangedListener(watcher)
 
         saveContactButton.setOnClickListener { saveContact() }
-        callButton.setOnClickListener { placeCall() }
+        changeContactButton.setOnClickListener { credentialGate.requestAuthorization() }
         changeContactButton.setOnClickListener { showSetupView() }
 
         refresh()
@@ -97,6 +99,27 @@ class KidsTalkCallFragment : Fragment() {
         callButton.tag = number          // store number for placeCall()
         callView.visibility = View.VISIBLE
         setupView.visibility = View.GONE
+
+    private fun onContactChangeAuthorization(result: DeviceCredentialGateResult) {
+        when (result) {
+            DeviceCredentialGateResult.Authorized -> showSetupView()
+            DeviceCredentialGateResult.NoDeviceCredential -> {
+                Toast.makeText(
+                    requireContext(),
+                    getString(R.string.kt_contact_change_unprotected_notice),
+                    Toast.LENGTH_LONG
+                ).show()
+                showSetupView()
+            }
+            DeviceCredentialGateResult.Cancelled -> {
+                Toast.makeText(
+                    requireContext(),
+                    getString(R.string.kt_contact_change_cancelled),
+                    Toast.LENGTH_SHORT
+                ).show()
+            }
+        }
+    }
     }
 
     private fun showSetupView() {
