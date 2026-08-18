@@ -883,6 +883,16 @@ class NotificationsManager
     }
 
     @WorkerThread
+    fun showInCallForegroundServiceNotificationIfNeeded() {
+        val call = coreContext.core.currentCall
+        if (call == null) {
+            Log.w("$TAG No current call, can't show in-call foreground service notification")
+            return
+        }
+        startInCallForegroundService(call)
+    }
+
+    @WorkerThread
     private fun showInCallForegroundServiceNotification(call: Call, notifiable: Notifiable, notification: Notification) {
         val service = inCallService
         if (service == null) {
