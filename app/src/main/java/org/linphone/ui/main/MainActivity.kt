@@ -26,9 +26,7 @@ import android.app.Dialog
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.graphics.Color
-import android.net.Uri
 import android.os.Bundle
-import android.os.Parcelable
 import android.view.Gravity
 import android.view.ViewGroup
 import android.view.ViewTreeObserver
@@ -39,7 +37,6 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.annotation.UiThread
 import androidx.car.app.connection.CarConnection
 import androidx.core.app.ActivityCompat
-import androidx.core.os.bundleOf
 import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
@@ -52,10 +49,7 @@ import androidx.navigation.NavDestination
 import androidx.navigation.NavOptions
 import androidx.navigation.findNavController
 import kotlin.math.max
-import kotlinx.coroutines.Deferred
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.async
-import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import org.linphone.LinphoneApplication.Companion.coreContext
@@ -66,14 +60,13 @@ import org.linphone.core.tools.Log
 import org.linphone.databinding.MainActivityBinding
 import org.linphone.ui.GenericActivity
 import org.linphone.ui.setup.KidsTalkSetupActivity
-import org.linphone.ui.main.chat.fragment.ConversationsListFragmentDirections
 import org.linphone.utils.PasswordDialogModel
+import org.linphone.utils.ShortcutUtils
 import org.linphone.ui.sso.SingleSignOnActivity
 import org.linphone.ui.main.viewmodel.MainViewModel
 import org.linphone.ui.main.viewmodel.SharedMainViewModel
 import org.linphone.utils.AppUtils
 import org.linphone.utils.DialogUtils
-import org.linphone.utils.Event
 import org.linphone.utils.FileUtils
 import org.linphone.utils.LinphoneUtils
 import androidx.core.content.edit
@@ -181,6 +174,7 @@ class MainActivity : GenericActivity() {
 
         while (!coreContext.isReady()) {
             Thread.sleep(50)
+        ShortcutUtils.disableConversationShortcuts(this)
         }
 
         viewModel = run {
@@ -494,225 +488,26 @@ class MainActivity : GenericActivity() {
     }
 
     private fun handleIntent(intent: Intent) {
-        val extras = intent.extras
-        val hasExtra = extras != null && !extras.isEmpty
-        Log.i(
-            "$TAG Handling intent action [${intent.action}], type [${intent.type}], data [${intent.data}] and has ${if (hasExtra) "extras" else "no extra"}"
-        )
-
-        val action = intent.action ?: return
-        when (action) {
-            Intent.ACTION_SEND -> {
-                handleSendIntent(intent, false)
-            }
-            Intent.ACTION_SEND_MULTIPLE -> {
-                handleSendIntent(intent, true)
-            }
-            Intent.ACTION_VIEW -> {
-                val uri = intent.data?.toString() ?: ""
-                if (uri.startsWith("linphone-config:")) {
-                    handleConfigIntent(uri)
-                } else {
-                    handleCallIntent(intent)
-                }
-            }
-            Intent.ACTION_DIAL, Intent.ACTION_CALL -> {
-                handleCallIntent(intent)
-            }
-            Intent.ACTION_VIEW_LOCUS -> {
-                val locus = Compatibility.extractLocusIdFromIntent(intent)
-                if (locus != null) {
-                    Log.i("$TAG Found chat room locus intent extra: $locus")
-                    handleLocusOrShortcut(locus)
-                }
-            }
-            else -> {
-                handleMainIntent(intent)
-            }
+        if (intent.action != Intent.ACTION_MAIN && intent.action != null) {
+            Log.i("$TAG Ignoring unsupported intent action [${intent.action}] in the single-contact experience")
         }
+        handleMainIntent()
     }
 
-    private fun handleLocusOrShortcut(id: String) {
-        Log.i("$TAG Found locus ID [$id]")
-        if (id.isNotEmpty()) {
-            Log.i("$TAG Navigating to conversation with ID [$id], computed from shortcut ID")
-            sharedViewModel.showConversationEvent.value = Event(id)
-        }
-    }
-
-    private fun handleMainIntent(intent: Intent) {
+    private fun handleMainIntent() {
         coreContext.postOnCoreThread { core ->
             if (core.accountList.isEmpty()) {
-                // Kids.Talk: show setup screen when no account is configured
                 Log.i("$TAG No account configured, showing Kids.Talk setup screen")
                 corePreferences.firstLaunch = false
                 coreContext.postOnMainThread {
                     try {
                         startActivity(Intent(this, KidsTalkSetupActivity::class.java))
-                    } catch (ise: IllegalStateException) {
-                        Log.e("$TAG Can't start activity: $ise")
-                    }
-                }
-            } else {
-                if (intent.hasExtra(ARGUMENTS_CHAT)) {
-                    Log.i("$TAG Intent has [Chat] extra")
-                    coreContext.postOnMainThread {
-                        try {
-                            Log.i("$TAG Trying to go to Conversations fragment")
-                            val args = intent.extras
-                            val conversationId = args?.getString(ARGUMENTS_CONVERSATION_ID, "")
-                            if (conversationId.isNullOrEmpty()) {
-                                Log.w("$TAG Found [Chat] extra but no conversation ID!")
-                            } else {
-                                Log.i("$TAG Found [Chat] extra with conversation ID [$conversationId]")
-                                sharedViewModel.showConversationEvent.value = Event(conversationId)
-                            }
-                            args?.clear()
-
-                            if (findNavController().currentDestination?.id == R.id.conversationsListFragment) {
-                                Log.w(
-                                    "$TAG Current destination is already conversations list, skipping navigation"
-                                )
-                            } else {
-                                val navOptionsBuilder = NavOptions.Builder()
-                                navOptionsBuilder.setPopUpTo(
-                                    findNavController().currentDestination?.id ?: R.id.historyListFragment,
-                                    true
-                                )
-                                navOptionsBuilder.setLaunchSingleTop(true)
-                                val navOptions = navOptionsBuilder.build()
-                                findNavController().navigate(
-                                    R.id.conversationsListFragment,
-                                    args,
-                                    navOptions
-                                )
-                            }
-                        } catch (ise: IllegalStateException) {
-                            Log.e("$TAG Can't navigate to Conversations fragment: $ise")
-                        }
+                    } catch (exception: IllegalStateException) {
+                        Log.e("$TAG Cannot start Kids.Talk setup: $exception")
                     }
                 }
             }
         }
-    }
-
-    private fun handleSendIntent(intent: Intent, multiple: Boolean) {
-        val parcelablesUri = arrayListOf<Uri>()
-
-        if (intent.type == "text/plain") {
-            Log.i("$TAG Intent type is [${intent.type}], expecting text in Intent.EXTRA_TEXT")
-            intent.getStringExtra(Intent.EXTRA_TEXT)?.let { extraText ->
-                Log.i("$TAG Found extra text in intent, long of [${extraText.length}]")
-                sharedViewModel.textToShareFromIntent.value = extraText
-            }
-        }
-
-        if (multiple) {
-            val parcelables =
-                intent.getParcelableArrayListExtra<Parcelable>(Intent.EXTRA_STREAM)
-            for (parcelable in parcelables.orEmpty()) {
-                val uri = parcelable as? Uri
-                if (uri != null) {
-                    Log.i("$TAG Found URI [$uri] in parcelable extra list")
-                    parcelablesUri.add(uri)
-                }
-            }
-        } else {
-            val uri = intent.getParcelableExtra<Parcelable>(Intent.EXTRA_STREAM) as? Uri
-            if (uri != null) {
-                Log.i("$TAG Found URI [$uri] in parcelable extra")
-                parcelablesUri.add(uri)
-            }
-        }
-
-        val list = arrayListOf<String>()
-        lifecycleScope.launch {
-            val deferred = arrayListOf<Deferred<String?>>()
-            for (uri in parcelablesUri) {
-                Log.i("$TAG Deferring copy from file [${uri.path}] to local storage")
-                deferred.add(async { FileUtils.getFilePath(this@MainActivity, uri, false) })
-            }
-
-            if (binding.drawerMenu.isOpen) {
-                Log.i("$TAG Drawer menu is opened, closing it")
-                closeDrawerMenu()
-            }
-            if (findNavController().currentDestination?.id == R.id.conversationsListFragment) {
-                if (sharedViewModel.displayedChatRoom != null) {
-                    Log.w(
-                        "$TAG Closing already opened conversation to prevent attaching file in it directly"
-                    )
-                    sharedViewModel.hideConversationEvent.value = Event(true)
-                } else {
-                    Log.i("$TAG No chat room currently displayed, nothing to close")
-                }
-            }
-
-            val paths = deferred.awaitAll()
-            for (path in paths) {
-                Log.i("$TAG Found file to share [$path] in intent")
-                if (path != null) list.add(path)
-            }
-
-            if (list.isNotEmpty()) {
-                sharedViewModel.filesToShareFromIntent.value = list
-            } else {
-                if (sharedViewModel.textToShareFromIntent.value.orEmpty().isNotEmpty()) {
-                    Log.i("$TAG Found plain text to share")
-                } else {
-                    Log.w("$TAG Failed to find at least one file or text to share!")
-                }
-            }
-
-            if (findNavController().currentDestination?.id == R.id.debugFragment) {
-                Log.i(
-                    "$TAG App is already started and in debug fragment, navigating to conversations list"
-                )
-                val conversationId = parseShortcutIfAny(intent)
-                if (conversationId != null) {
-                    Log.i(
-                        "$TAG Navigating from debug to conversation with ID [$conversationId], computed from shortcut ID"
-                    )
-                    sharedViewModel.showConversationEvent.value = Event(conversationId)
-                }
-
-                val action = ConversationsListFragmentDirections.actionGlobalConversationsListFragment()
-                val options = NavOptions.Builder()
-                options.apply {
-                    setPopUpTo(R.id.helpFragment, true)
-                    setLaunchSingleTop(true)
-                }
-                findNavController().navigate(action, options.build())
-            } else {
-                val conversationId = parseShortcutIfAny(intent)
-                if (conversationId != null) {
-                    Log.i(
-                        "$TAG Navigating to conversation with conversation ID [$conversationId] addresses, computed from shortcut ID"
-                    )
-                    sharedViewModel.showConversationEvent.value = Event(conversationId)
-                }
-
-                if (findNavController().currentDestination?.id == R.id.conversationsListFragment) {
-                    Log.w(
-                        "$TAG Current destination is already conversations list, skipping navigation"
-                    )
-                } else {
-                    val action = ConversationsListFragmentDirections.actionGlobalConversationsListFragment()
-                    findNavController().navigate(action)
-                }
-            }
-        }
-    }
-
-    private fun parseShortcutIfAny(intent: Intent): String? {
-        val shortcutId = intent.getStringExtra("android.intent.extra.shortcut.ID") // Intent.EXTRA_SHORTCUT_ID
-        if (shortcutId != null) {
-            Log.i("$TAG Found shortcut ID [$shortcutId]")
-            return shortcutId
-        } else {
-            Log.i("$TAG No shortcut ID was found")
-        }
-        return null
     }
 
     private fun handleCallIntent(intent: Intent) {

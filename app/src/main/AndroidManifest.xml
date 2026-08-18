@@ -79,9 +79,6 @@
             android:exported="true"
             android:launchMode="singleTask">
 
-            <meta-data
-                android:name="android.app.shortcuts"
-                android:resource="@xml/shortcuts" />
 
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
@@ -92,41 +89,7 @@
                 <action android:name="android.intent.action.VIEW_LOCUS" />
             </intent-filter>
 
-            <intent-filter>
-                <action android:name="android.intent.action.SEND" />
-                <category android:name="android.intent.category.DEFAULT" />
-                <data android:mimeType="text/*" />
-                <data android:mimeType="image/*" />
-                <data android:mimeType="audio/*" />
-                <data android:mimeType="video/*" />
-                <data android:mimeType="application/*" />
-            </intent-filter>
 
-            <intent-filter>
-                <action android:name="android.intent.action.SEND_MULTIPLE" />
-                <category android:name="android.intent.category.DEFAULT" />
-                <data android:mimeType="image/*" />
-                <data android:mimeType="audio/*" />
-                <data android:mimeType="video/*" />
-                <data android:mimeType="application/*" />
-            </intent-filter>
-
-            <intent-filter>
-                <action android:name="android.intent.action.DIAL" />
-                <action android:name="android.intent.action.VIEW" />
-                <action android:name="android.intent.action.CALL" />
-                <category android:name="android.intent.category.DEFAULT" />
-                <category android:name="android.intent.category.BROWSABLE" />
-                <data android:scheme="tel" />
-                <data android:scheme="sip" />
-                <data android:scheme="callto" />
-                <data android:scheme="sips" />
-                <data android:scheme="sip-linphone" />
-                <data android:scheme="sips-linphone" />
-                <data android:scheme="linphone-sip" />
-                <data android:scheme="linphone-sips" />
-                <data android:scheme="linphone-config" />
-            </intent-filter>
 
         </activity>
 
