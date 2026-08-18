@@ -1,21 +1,61 @@
-# Add project specific ProGuard rules here.
-# You can control the set of applied configuration files using the
-# proguardFiles setting in build.gradle.kts.
+# ──────────────────────────────────────────────────────────────────────────────
+# Kids.Talk — R8/ProGuard keep rules (KID-393)
 #
-# For more details, see
-#   http://developer.android.com/guide/developing/tools/proguard.html
+# The Linphone SDK AAR ships its own comprehensive consumer rules (proguard.txt,
+# ~23 KB) that keep all org.linphone.core.* interfaces and implementations.
+# This file covers the APP-LEVEL classes that R8 cannot infer from code alone.
+# ──────────────────────────────────────────────────────────────────────────────
 
-# If your project uses WebView with JS, uncomment the following
-# and specify the fully qualified class name to the JavaScript interface
-# class:
-#-keepclassmembers class fqcn.of.javascript.interface.for.webview {
-#   public *;
-#}
+# ── Preserve line numbers for crash symbolication ─────────────────────────────
+-keepattributes SourceFile,LineNumberTable
+-renamesourcefileattribute SourceFile
 
-# Uncomment this to preserve the line number information for
-# debugging stack traces.
-#-keepattributes SourceFile,LineNumberTable
+# ── Android Manifest components (instantiated by the system via reflection) ───
+# Services
+-keep class org.linphone.core.CoreInCallService { *; }
+-keep class org.linphone.core.CorePushService { *; }
+-keep class org.linphone.core.CoreFileTransferService { *; }
+-keep class org.linphone.core.CoreKeepAliveThirdPartyAccountsService { *; }
+-keep class org.linphone.telecom.auto.AndroidAutoService { *; }
+-keep class org.linphone.telecom.TelecomConnectionService { *; }
+-keep class org.linphone.telecom.TelecomRedirectionService { *; }
 
-# If you keep the line number information, uncomment this to
-# hide the original source file name.
-#-renamesourcefileattribute SourceFile
+# BroadcastReceivers
+-keep class org.linphone.core.CorePushReceiver { *; }
+-keep class org.linphone.notifications.NotificationBroadcastReceiver { *; }
+-keep class org.linphone.core.BootReceiver { *; }
+
+# ── Firebase Cloud Messaging ──────────────────────────────────────────────────
+-keep class com.google.firebase.messaging.FirebaseMessagingService { *; }
+-keep class * extends com.google.firebase.messaging.FirebaseMessagingService { *; }
+
+# ── Data Binding generated classes ────────────────────────────────────────────
+-keep class org.linphone.databinding.** { *; }
+
+# ── Navigation Safe Args (generated Directions classes) ───────────────────────
+-keep class * extends androidx.navigation.NavArgs { *; }
+-keep class **Directions { *; }
+-keep class **Directions$* { *; }
+
+# ── Kotlin serialization / reflection ─────────────────────────────────────────
+-keepclassmembers class * {
+    @kotlin.Metadata *;
+}
+-keep class kotlin.Metadata { *; }
+
+# ── Enums (used by Linphone SDK callbacks) ────────────────────────────────────
+-keepclassmembers enum * {
+    public static **[] values();
+    public static ** valueOf(java.lang.String);
+}
+
+# ── Parcelable (used by TelecomManager) ───────────────────────────────────────
+-keepclassmembers class * implements android.os.Parcelable {
+    public static final ** CREATOR;
+}
+
+# ── Suppress warnings for optional dependencies ──────────────────────────────
+-dontwarn org.bouncycastle.**
+-dontwarn org.conscrypt.**
+-dontwarn org.openjsse.**
+-dontwarn javax.annotation.**
