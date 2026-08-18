@@ -37,8 +37,6 @@
     <!-- Needed for auto start at boot if keep alive service is enabled -->
     <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
 
-    <uses-permission android:name="android.permission.READ_PHONE_STATE"/>
-    <uses-permission android:name="android.permission.READ_PHONE_NUMBERS"/>
 
     <application
         android:name=".LinphoneApplication"
@@ -225,14 +223,6 @@
             </intent-filter>
         </service>
 
-        <service
-            android:name=".telecom.TelecomRedirectionService"
-            android:exported="true"
-            android:permission="android.permission.BIND_CALL_REDIRECTION_SERVICE">
-            <intent-filter>
-                <action android:name="android.telecom.CallRedirectionService"/>
-            </intent-filter>
-        </service>
 
         <!-- Receivers -->
 
