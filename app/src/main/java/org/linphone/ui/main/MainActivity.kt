@@ -68,7 +68,7 @@ import org.linphone.ui.GenericActivity
 import org.linphone.ui.setup.KidsTalkSetupActivity
 import org.linphone.ui.main.chat.fragment.ConversationsListFragmentDirections
 import org.linphone.utils.PasswordDialogModel
-import org.linphone.ui.main.sso.fragment.SingleSignOnFragmentDirections
+import org.linphone.ui.sso.SingleSignOnActivity
 import org.linphone.ui.main.viewmodel.MainViewModel
 import org.linphone.ui.main.viewmodel.SharedMainViewModel
 import org.linphone.utils.AppUtils
@@ -298,11 +298,11 @@ class MainActivity : GenericActivity() {
                 Log.i(
                     "$TAG Navigating to Single Sign On Fragment with server URL [$serverUrl] and username [$username]"
                 )
-                val action = SingleSignOnFragmentDirections.actionGlobalSingleSignOnFragment(
-                    serverUrl,
-                    username
-                )
-                findNavController().navigate(action)
+                val ssoIntent = Intent(this, SingleSignOnActivity::class.java).apply {
+                    putExtra(SingleSignOnActivity.INTENT_EXTRA_SERVER_URL, serverUrl)
+                    putExtra(SingleSignOnActivity.INTENT_EXTRA_USERNAME, username)
+                }
+                startActivity(ssoIntent)
             }
         }
 

@@ -42,7 +42,7 @@ class TelecomConnectionService : ConnectionService() {
             val address = coreContext.core.interpretUrl(uri.toString(), true)
             if (address != null) {
                 Log.i("$TAG Starting call to [${address.asStringUriOnly()}]")
-                coreContext.startCall(address = address, skipNetworkReachabilityTest = true)
+                coreContext.startCall(address = address)
             } else {
                 Log.e("$TAG Failed to parse [$uri] as a SIP address!")
             }
