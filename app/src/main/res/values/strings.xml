@@ -1127,4 +1127,8 @@
     <string name="kt_save_contact">SAVE CONTACT</string>
 
     <string name="kt_call_button">CALL</string>
+    <string name="kt_contact_change_auth_title">Confirm contact change</string>
+    <string name="kt_contact_change_auth_subtitle">Use this device\'s screen lock to change the household contact.</string>
+    <string name="kt_contact_change_unprotected_notice">This device has no screen lock. The household contact can be changed now.</string>
+    <string name="kt_contact_change_cancelled">Contact change was cancelled.</string>
 </resources>
