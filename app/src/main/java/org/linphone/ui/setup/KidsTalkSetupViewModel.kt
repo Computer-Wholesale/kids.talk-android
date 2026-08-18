@@ -18,6 +18,7 @@ import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import org.linphone.LinphoneApplication.Companion.coreContext
 import org.linphone.R
+import org.linphone.ui.main.kidstalk.KidsTalkSipEndpoint
 import org.linphone.core.Account
 import org.linphone.core.AuthInfo
 import org.linphone.core.Core
@@ -38,14 +39,11 @@ import org.linphone.utils.AppUtils
  * - [registrationSuccess]: true when the account registers successfully
  *
  * The Activity calls [registerAccount] with the validated username and password.
- * Validation policy (6-digit, prefix 6 or 7) lives in the Activity's isInputValid().
  */
 class KidsTalkSetupViewModel : ViewModel() {
 
     companion object {
         private const val TAG = "[KidsTalk Setup ViewModel]"
-        private const val PBX_DOMAIN = "pbx.kids.talk"
-        private const val PBX_PORT = 5160
         private val PBX_TRANSPORT = TransportType.Udp
     }
 
@@ -120,7 +118,6 @@ class KidsTalkSetupViewModel : ViewModel() {
     /**
      * Initiates SIP account registration against the Kids.Talk PBX.
      *
-     * @param username A validated 6-digit extension (prefix 6 or 7)
      * @param password The account password
      */
     @UiThread
@@ -136,16 +133,16 @@ class KidsTalkSetupViewModel : ViewModel() {
                 password,
                 null, // ha1
                 null, // realm
-                PBX_DOMAIN
+                KidsTalkSipEndpoint.DOMAIN
             )
 
             val accountParams = core.createAccountParams()
-            val identity = Factory.instance().createAddress("sip:$username@$PBX_DOMAIN")
-            identity?.port = PBX_PORT
+            val identity = Factory.instance().createAddress("sip:$username@$KidsTalkSipEndpoint.DOMAIN")
+            identity?.port = KidsTalkSipEndpoint.PORT
             accountParams.identityAddress = identity
 
-            val serverAddress = Factory.instance().createAddress("sip:$PBX_DOMAIN")
-            serverAddress?.port = PBX_PORT
+            val serverAddress = Factory.instance().createAddress("sip:$KidsTalkSipEndpoint.DOMAIN")
+            serverAddress?.port = KidsTalkSipEndpoint.PORT
             serverAddress?.transport = PBX_TRANSPORT
             accountParams.serverAddress = serverAddress
 
@@ -160,7 +157,7 @@ class KidsTalkSetupViewModel : ViewModel() {
             core.addAuthInfo(authInfo)
             core.addAccount(account)
 
-            Log.i("$TAG Registration initiated for $username@$PBX_DOMAIN:$PBX_PORT")
+            Log.i("$TAG Registration initiated for $username@$KidsTalkSipEndpoint.DOMAIN:$KidsTalkSipEndpoint.PORT")
         }
     }
 
