@@ -482,67 +482,14 @@ class MainActivity : GenericActivity() {
 
     private fun goToLatestVisitedFragment() {
         try {
-            // Prevent navigating to default fragment upon rotation (we only want to do it on first start)
-            if (intent.action == Intent.ACTION_MAIN && intent.type == null && intent.data == null) {
-                if (viewModel.mainIntentHandled) {
-                    Log.d(
-                        "$TAG Main intent without type nor data was already handled, do nothing"
-                    )
-                    navigatedToDefaultFragment = true
-                    return
-                } else {
-                    viewModel.mainIntentHandled = true
-                }
-            }
-
-            val defaultFragmentId = getPreferences(MODE_PRIVATE).getInt(
-                DEFAULT_FRAGMENT_KEY,
-                CONTACTS_FRAGMENT_ID
-            )
-            Log.i(
-                "$TAG Trying to navigate to set default destination [$defaultFragmentId]"
-            )
-            try {
-                val navOptionsBuilder = NavOptions.Builder()
-                navOptionsBuilder.setPopUpTo(R.id.contactsListFragment, true)
-                navOptionsBuilder.setLaunchSingleTop(true)
-                val navOptions = navOptionsBuilder.build()
-                val args = bundleOf()
-                when (defaultFragmentId) {
-                    CONTACTS_FRAGMENT_ID -> {
-                        findNavController().addOnDestinationChangedListener(destinationListener)
-                        findNavController().navigate(
-                            R.id.contactsListFragment,
-                            args,
-                            navOptions
-                        )
-                    }
-                    CHAT_FRAGMENT_ID -> {
-                        findNavController().addOnDestinationChangedListener(destinationListener)
-                        findNavController().navigate(
-                            R.id.conversationsListFragment,
-                            args,
-                            navOptions
-                        )
-                    }
-                    MEETINGS_FRAGMENT_ID -> {
-                        findNavController().addOnDestinationChangedListener(destinationListener)
-                        findNavController().navigate(
-                            R.id.meetingsListFragment,
-                            args,
-                            navOptions
-                        )
-                    }
-                    else -> {
-                        Log.i("$TAG Default fragment is the same as the latest visited one")
-                        navigatedToDefaultFragment = true
-                    }
-                }
-            } catch (ise: IllegalStateException) {
-                Log.e("$TAG Can't navigate to Conversations fragment: $ise")
-            }
-        } catch (ise: IllegalStateException) {
-            Log.i("$TAG Failed to handle intent: $ise")
+            viewModel.mainIntentHandled = true
+            navigatedToDefaultFragment = true
+            val navOptions = NavOptions.Builder()
+                .setLaunchSingleTop(true)
+                .build()
+            findNavController().navigate(R.id.kidsTalkCallFragment, null, navOptions)
+        } catch (exception: IllegalStateException) {
+            Log.i("$TAG Failed to open Kids.Talk home: $exception")
         }
     }
 
