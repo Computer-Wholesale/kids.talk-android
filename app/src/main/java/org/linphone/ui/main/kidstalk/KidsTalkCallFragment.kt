@@ -116,11 +116,7 @@ class KidsTalkCallFragment : Fragment() {
         saveContactButton.isEnabled = name.isNotEmpty() && isValidNumber(number)
     }
 
-    private fun isValidNumber(number: String): Boolean {
-        // Accept any 4-10 digit number — no prefix restriction on the contact
-        if (number.length < 4 || number.length > 10) return false
-        return number.all { it.isDigit() }
-    }
+    private fun isValidNumber(number: String): Boolean = KidsTalkContactPolicy.isValidExtension(number)
 
     // ── Persistence ──────────────────────────────────────────────────────────
 
@@ -149,11 +145,9 @@ class KidsTalkCallFragment : Fragment() {
 
     private fun placeCall() {
         val number = callButton.tag as? String ?: return
-        // coreContext is imported via LinphoneApplication.Companion.coreContext
         val core = coreContext.core
-
-        // Build the SIP address: sip:NUMBER@pbx.kids.talk:5160
-        val sipAddress = "sip:$number@pbx.kids.talk:5160"
+        // Internal extensions are validated locally; do not apply an international prefix.
+        val sipAddress = KidsTalkSipEndpoint.addressForExtension(number)
         val address = core.interpretUrl(sipAddress, false)
         if (address == null) {
             Toast.makeText(requireContext(), getString(R.string.kt_call_failed), Toast.LENGTH_SHORT).show()
