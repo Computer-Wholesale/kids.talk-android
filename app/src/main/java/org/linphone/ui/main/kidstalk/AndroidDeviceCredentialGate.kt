@@ -32,7 +32,7 @@ sealed interface DeviceCredentialGateResult {
 class AndroidDeviceCredentialGate(
     private val fragment: Fragment,
     private val onResult: (DeviceCredentialGateResult) -> Unit
-) {
+) : DeviceCredentialGate {
     private val credentialLauncher: ActivityResultLauncher<Intent> =
         fragment.registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
             onResult(
@@ -44,7 +44,7 @@ class AndroidDeviceCredentialGate(
             )
         }
 
-    fun requestAuthorization() {
+    override fun requestAuthorization() {
         val context = fragment.requireContext()
         val keyguardManager = context.getSystemService(Context.KEYGUARD_SERVICE) as KeyguardManager
         val action = DeviceCredentialPolicy.resolve(

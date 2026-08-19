@@ -1121,7 +1121,9 @@
     <string name="kt_contact_saved">Contact saved</string>
     <string name="kt_call_failed">Unable to place call</string>
     <string name="kt_change_contact">CHANGE CONTACT</string>
+    <string name="kt_contact_name_label">Contact name</string>
     <string name="kt_contact_name_hint">Contact name</string>
+    <string name="kt_contact_extension_label">Extension number</string>
     <string name="kt_contact_number_hint">Extension number</string>
     <string name="kt_save_contact">SAVE CONTACT</string>
 

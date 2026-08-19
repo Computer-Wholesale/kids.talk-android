@@ -11,7 +11,7 @@ import org.linphone.core.tools.Log
  * Resolves the one callable household contact without allowing locally saved data to override
  * centrally managed configuration. The local store is encrypted and excluded from backup/transfer.
  */
-class KidsTalkContactRepository(private val context: Context) {
+class KidsTalkContactRepository(private val context: Context) : KidsTalkContactStore {
     companion object {
         private const val TAG = "[KidsTalk Contact Repository]"
         const val LOCAL_STORE_FILE = "kidstalk_contact.pref"
@@ -19,18 +19,18 @@ class KidsTalkContactRepository(private val context: Context) {
         private const val KEY_LOCAL_EXTENSION = "local_extension"
     }
 
-    fun resolve(): ResolvedKidsTalkContact? = KidsTalkContactResolver.resolve(
+    override fun resolve(): ResolvedKidsTalkContact? = KidsTalkContactResolver.resolve(
         managed = loadManagedContact(),
         local = loadLocalContact()
     )
 
-    fun saveLocal(contact: KidsTalkContact): Boolean {
+    override fun saveLocal(contact: KidsTalkContact): Boolean {
         if (!KidsTalkContactPolicy.isValidExtension(contact.extension) || contact.name.isBlank()) return false
         return encryptedPreferences()?.edit()?.putString(KEY_LOCAL_NAME, contact.name)
             ?.putString(KEY_LOCAL_EXTENSION, contact.extension)?.commit() == true
     }
 
-    fun loadLocalContact(): KidsTalkContact? = encryptedPreferences()?.let { preferences ->
+    override fun loadLocalContact(): KidsTalkContact? = encryptedPreferences()?.let { preferences ->
         contactFrom(preferences.getString(KEY_LOCAL_NAME, null), preferences.getString(KEY_LOCAL_EXTENSION, null))
     }
 

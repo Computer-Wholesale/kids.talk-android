@@ -19,16 +19,21 @@
 
         <TextView
             android:id="@+id/contact_name_label"
-            android:layout_width="wrap_content"
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
+            android:ellipsize="end"
+            android:gravity="center"
+            android:maxLines="2"
             android:textSize="28sp"
             android:textStyle="bold"
             android:layout_marginBottom="32dp" />
 
         <Button
             android:id="@+id/call_button"
-            android:layout_width="200dp"
-            android:layout_height="200dp"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:minHeight="96dp"
+            android:maxLines="2"
             android:text="@string/kt_call_button"
             android:textSize="24sp" />
 
@@ -50,6 +55,13 @@
         android:orientation="vertical"
         android:visibility="gone">
 
+        <TextView
+            android:id="@+id/setup_name_label"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:labelFor="@id/setup_name_input"
+            android:text="@string/kt_contact_name_label" />
+
         <EditText
             android:id="@+id/setup_name_input"
             android:layout_width="match_parent"
@@ -57,6 +69,13 @@
             android:hint="@string/kt_contact_name_hint"
             android:inputType="textPersonName"
             android:layout_marginBottom="16dp" />
+
+        <TextView
+            android:id="@+id/setup_number_label"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:labelFor="@id/setup_number_input"
+            android:text="@string/kt_contact_extension_label" />
 
         <EditText
             android:id="@+id/setup_number_input"
