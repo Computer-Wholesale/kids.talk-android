@@ -100,7 +100,7 @@ jobs:
           run_gate test_debug_unit ./gradlew :app:testDebugUnitTest --no-daemon --stacktrace
           summarize_junit
           run_gate release_merged_manifest ./gradlew :app:processReleaseMainManifest --no-daemon --stacktrace
-          manifest_path=$(find app/build/intermediates -path '*merged_manifests*release*' -name AndroidManifest.xml -print -quit)
+          manifest_path=$(find app/build/intermediates -path '*merged_manifest*release*' -name AndroidManifest.xml -print -quit)
           {
             audit_status=0
             echo "RELEASE_MERGED_MANIFEST=${manifest_path}"
