@@ -1,0 +1,56 @@
+name: KID-394 Emulator Accessibility
+
+on:
+  push:
+    branches:
+      - defect/KID-394-accessibility-instrumentation
+      - integration/kid394-qa-remediation
+  workflow_dispatch:
+
+jobs:
+  connected-debug-tests:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+      - uses: android-actions/setup-android@v3
+      - name: Prepare non-secret Firebase configuration
+        run: |
+          cat > app/google-services.json <<'JSON'
+          {"project_info":{"project_number":"0","project_id":"kidstalk-ci","storage_bucket":"kidstalk-ci.appspot.com"},"client":[{"client_info":{"mobilesdk_app_id":"1:0:android:0","android_client_info":{"package_name":"com.kidstalk.phone"}},"api_key":[{"current_key":"CI_PLACEHOLDER"}],"services":{"appinvite_service":{"other_platform_oauth_client":[]}}}],"configuration_version":"1"}
+          JSON
+      - name: Run API 35 instrumented accessibility tests at documented maximum scale
+        uses: reactivecircus/android-emulator-runner@v2
+        with:
+          api-level: 35
+          target: google_apis
+          arch: x86_64
+          emulator-options: -no-window -no-audio -no-boot-anim -gpu swiftshader_indirect
+          disable-animations: true
+          script: |
+            set -euo pipefail
+            original_font=$(adb shell settings get system font_scale | tr -d '\r')
+            original_density=$(adb shell wm density | awk '/Override density/ {print $3}')
+            restore() {
+              adb shell settings put system font_scale "${original_font:-1.0}"
+              if [ -n "${original_density:-}" ]; then adb shell wm density "$original_density"; else adb shell wm density reset; fi
+            }
+            trap restore EXIT
+            adb shell settings put system font_scale 1.30
+            adb shell wm density 560
+            ./gradlew :app:connectedDebugAndroidTest --no-daemon --stacktrace
+      - name: Upload emulator evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: kid394-emulator-evidence
+          path: |
+            app/build/outputs/androidTest-results/**
+            app/build/reports/androidTests/**
+            app/build/outputs/connected_android_test_additional_output/**
+            app/build/outputs/logs/**
+          if-no-files-found: warn

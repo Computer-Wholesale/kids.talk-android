@@ -31,10 +31,16 @@ class KidsTalkCallFragment : Fragment() {
     private lateinit var setupNameInput: EditText
     private lateinit var setupNumberInput: EditText
     private lateinit var saveContactButton: Button
-    private lateinit var credentialGate: AndroidDeviceCredentialGate
-    private lateinit var contactRepository: KidsTalkContactRepository
+    private lateinit var credentialGate: DeviceCredentialGate
+    private lateinit var contactRepository: KidsTalkContactStore
 
+    private var testDependencies: KidsTalkCallTestDependencies? = null
     private var effectiveContact: ResolvedKidsTalkContact? = null
+
+    /** Installed only by an instrumentation FragmentFactory before lifecycle creation. */
+    internal fun installTestDependencies(dependencies: KidsTalkCallTestDependencies) {
+        testDependencies = dependencies
+    }
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -53,8 +59,11 @@ class KidsTalkCallFragment : Fragment() {
         setupNumberInput = view.findViewById(R.id.setup_number_input)
         saveContactButton = view.findViewById(R.id.save_contact_button)
 
-        contactRepository = KidsTalkContactRepository(requireContext().applicationContext)
-        credentialGate = AndroidDeviceCredentialGate(this, ::onContactChangeAuthorization)
+        val dependencies = testDependencies
+        contactRepository = dependencies?.contactStore
+            ?: KidsTalkContactRepository(requireContext().applicationContext)
+        credentialGate = dependencies?.credentialGateFactory(::onContactChangeAuthorization)
+            ?: AndroidDeviceCredentialGate(this, ::onContactChangeAuthorization)
 
         val watcher = object : TextWatcher {
             override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) = Unit
@@ -70,11 +79,13 @@ class KidsTalkCallFragment : Fragment() {
         callButton.setOnClickListener { placeCall() }
         changeContactButton.setOnClickListener { credentialGate.requestAuthorization() }
 
-        coreContext.mdmConfigAppliedEvent.observe(viewLifecycleOwner) { event ->
-            event.consume { refresh() }
-        }
-        coreContext.mdmConfigRemovedEvent.observe(viewLifecycleOwner) { event ->
-            event.consume { refresh() }
+        if (testDependencies == null) {
+            coreContext.mdmConfigAppliedEvent.observe(viewLifecycleOwner) { event ->
+                event.consume { refresh() }
+            }
+            coreContext.mdmConfigRemovedEvent.observe(viewLifecycleOwner) { event ->
+                event.consume { refresh() }
+            }
         }
         refresh()
     }
