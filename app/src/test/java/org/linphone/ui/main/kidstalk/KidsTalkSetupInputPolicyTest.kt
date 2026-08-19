@@ -1,7 +1,7 @@
 package org.linphone.ui.main.kidstalk
 
-import kotlin.test.Test
-import kotlin.test.assertEquals
+import org.junit.Assert.assertEquals
+import org.junit.Test
 
 class KidsTalkSetupInputPolicyTest {
     @Test
