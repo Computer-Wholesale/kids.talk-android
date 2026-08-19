@@ -78,8 +78,26 @@ jobs:
             fi
           }
 
+          summarize_junit() {
+            python3 - <<'PY' | tee ci-artifacts/test_debug_unit.summary
+          from glob import glob
+          from xml.etree import ElementTree as ET
+
+          totals = {"tests": 0, "failures": 0, "errors": 0, "skipped": 0}
+          for path in glob("app/build/test-results/testDebugUnitTest/*.xml"):
+              root = ET.parse(path).getroot()
+              for key in totals:
+                  totals[key] += int(root.attrib.get(key, 0))
+          print(
+              "TEST_DEBUG_UNIT_SUMMARY "
+              + " ".join(f"{key.upper()}={value}" for key, value in totals.items())
+          )
+          PY
+          }
+
           run_gate tasks_all ./gradlew :app:tasks --all --no-daemon --stacktrace
           run_gate test_debug_unit ./gradlew :app:testDebugUnitTest --no-daemon --stacktrace
+          summarize_junit
           run_gate compile_release_kotlin ./gradlew :app:compileReleaseKotlin --no-daemon --stacktrace
           run_gate android_lint ./gradlew :app:lint --no-daemon --stacktrace
           run_gate minify_release_r8 ./gradlew :app:minifyReleaseWithR8 --no-daemon --stacktrace
@@ -93,8 +111,8 @@ jobs:
           name: kid394-handoff-evidence
           path: |
             ci-artifacts/
-            app/build/reports/
-            app/build/test-results/
-            app/build/outputs/mapping/
+            app/build/test-results/testDebugUnitTest/
+            app/build/outputs/mapping/release/
+            app/build/reports/lint-results-debug.html
           if-no-files-found: warn
           retention-days: 14
