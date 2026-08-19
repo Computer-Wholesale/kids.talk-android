@@ -5,6 +5,7 @@ on:
   push:
     branches:
       - integration/kid394-handoff-evidence
+      - integration/kid394-qa-remediation
 
 permissions:
   contents: read
