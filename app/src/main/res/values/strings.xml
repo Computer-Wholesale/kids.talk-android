@@ -1090,7 +1090,6 @@
 
     <!-- Step 1: Validation errors (Activity) -->
     <string name="setup_username_length_error">Extension must be exactly 6 digits</string>
-    <string name="setup_username_prefix_error">Extension must start with 6 or 7</string>
     <string name="setup_username_digits_error">Extension must contain only digits</string>
 
     <!-- Step 1: Registration errors (ViewModel — Privacy Invariant: approved copy only) -->
