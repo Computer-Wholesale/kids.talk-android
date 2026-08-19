@@ -34,6 +34,8 @@ import com.google.android.material.textfield.TextInputEditText
 import com.google.android.material.textfield.TextInputLayout
 import org.linphone.R
 import org.linphone.ui.main.kidstalk.KidsTalkContactPolicy
+import org.linphone.ui.main.kidstalk.KidsTalkSetupInputPolicy
+import org.linphone.ui.main.kidstalk.SetupUsernameValidation
 import org.linphone.ui.main.MainActivity
 
 @UiThread
@@ -149,17 +151,17 @@ class KidsTalkSetupActivity : AppCompatActivity() {
         // ── Live validation ──────────────────────────────────────────────────
         usernameInput.addTextChangedListener(object : TextWatcher {
             override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
+
             override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {}
+
             override fun afterTextChanged(s: Editable?) {
                 val raw = s?.toString().orEmpty()
                 viewModel.username = raw
-                usernameLayout.error = when {
-                    raw.isEmpty() -> null
-                    raw.length != 6 -> getString(R.string.setup_username_length_error)
-                    !raw.first().let { it == '6' || it == '7' } ->
-                        getString(R.string.setup_username_prefix_error)
-                    !raw.all { it.isDigit() } -> getString(R.string.setup_username_digits_error)
-                    else -> null
+                usernameLayout.error = when (KidsTalkSetupInputPolicy.validateUsername(raw)) {
+                    SetupUsernameValidation.Empty,
+                    SetupUsernameValidation.Valid -> null
+                    SetupUsernameValidation.NonDigit -> getString(R.string.setup_username_digits_error)
+                    SetupUsernameValidation.InvalidExtension -> getString(R.string.setup_username_length_error)
                 }
                 updateConnectButton()
             }
@@ -167,7 +169,9 @@ class KidsTalkSetupActivity : AppCompatActivity() {
 
         passwordInput.addTextChangedListener(object : TextWatcher {
             override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
+
             override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {}
+
             override fun afterTextChanged(s: Editable?) {
                 viewModel.password = s?.toString().orEmpty()
                 updateConnectButton()
