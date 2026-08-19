@@ -24,7 +24,9 @@ sealed interface DeviceCredentialGateResult {
 /**
  * One-time handset-authentication gate for changing a locally stored household contact.
  *
- * The result is delivered only to the active Fragment instance. No authorization state,
+ * API 28–29 use the platform device-credential intent. API 30+ asks Android whether the
+ * combined BIOMETRIC_STRONG | DEVICE_CREDENTIAL capability is available and, when it is,
+ * presents BiometricPrompt with those same combined authenticators. No authorization state,
  * biometric result, or device-credential result is persisted.
  */
 class AndroidDeviceCredentialGate(
@@ -45,20 +47,38 @@ class AndroidDeviceCredentialGate(
     fun requestAuthorization() {
         val context = fragment.requireContext()
         val keyguardManager = context.getSystemService(Context.KEYGUARD_SERVICE) as KeyguardManager
-        val biometricAvailable = BiometricManager.from(context).canAuthenticate(
-            BiometricManager.Authenticators.BIOMETRIC_STRONG
-        ) == BiometricManager.BIOMETRIC_SUCCESS
+        val action = DeviceCredentialPolicy.resolve(
+            apiLevel = Build.VERSION.SDK_INT,
+            isDeviceSecure = keyguardManager.isDeviceSecure,
+            combinedCapability = combinedCapability(context)
+        )
 
-        when (
-            DeviceCredentialPolicy.resolve(
-                apiLevel = Build.VERSION.SDK_INT,
-                isDeviceSecure = keyguardManager.isDeviceSecure,
-                biometricAvailable = biometricAvailable
-            )
-        ) {
-            DeviceCredentialAction.BiometricWithDeviceCredentialFallback -> requestBiometric(context)
-            DeviceCredentialAction.LegacyDeviceCredential -> requestDeviceCredential(keyguardManager, context)
-            DeviceCredentialAction.ProceedWithoutCredential -> onResult(DeviceCredentialGateResult.NoDeviceCredential)
+        when (action) {
+            DeviceCredentialAction.CombinedBiometricPrompt -> requestCombinedPrompt(context)
+            DeviceCredentialAction.LegacyDeviceCredential,
+            DeviceCredentialAction.ExceptionalLegacyDeviceCredential -> {
+                requestDeviceCredential(keyguardManager, context)
+            }
+            DeviceCredentialAction.ProceedWithoutCredential -> {
+                onResult(DeviceCredentialGateResult.NoDeviceCredential)
+            }
+        }
+    }
+
+    private fun combinedCapability(context: Context): CombinedAuthenticatorCapability {
+        if (Build.VERSION.SDK_INT <= Build.VERSION_CODES.Q) {
+            return CombinedAuthenticatorCapability.Unsupported
+        }
+
+        val authenticators =
+            BiometricManager.Authenticators.BIOMETRIC_STRONG or
+                BiometricManager.Authenticators.DEVICE_CREDENTIAL
+        return when (BiometricManager.from(context).canAuthenticate(authenticators)) {
+            BiometricManager.BIOMETRIC_SUCCESS -> CombinedAuthenticatorCapability.Available
+            BiometricManager.BIOMETRIC_ERROR_NO_HARDWARE -> CombinedAuthenticatorCapability.NoHardware
+            BiometricManager.BIOMETRIC_ERROR_NONE_ENROLLED -> CombinedAuthenticatorCapability.NoneEnrolled
+            BiometricManager.BIOMETRIC_ERROR_UNSUPPORTED -> CombinedAuthenticatorCapability.Unsupported
+            else -> CombinedAuthenticatorCapability.UnknownError
         }
     }
 
@@ -74,7 +94,7 @@ class AndroidDeviceCredentialGate(
         }
     }
 
-    private fun requestBiometric(context: Context) {
+    private fun requestCombinedPrompt(context: Context) {
         val executor = ContextCompat.getMainExecutor(context)
         val prompt = BiometricPrompt(
             fragment,
@@ -87,15 +107,7 @@ class AndroidDeviceCredentialGate(
 
                 override fun onAuthenticationError(errorCode: Int, errString: CharSequence) {
                     super.onAuthenticationError(errorCode, errString)
-                    if (
-                        errorCode == BiometricPrompt.ERROR_LOCKOUT ||
-                        errorCode == BiometricPrompt.ERROR_LOCKOUT_PERMANENT
-                    ) {
-                        val keyguardManager = context.getSystemService(Context.KEYGUARD_SERVICE) as KeyguardManager
-                        requestDeviceCredential(keyguardManager, context)
-                    } else {
-                        onResult(DeviceCredentialGateResult.Cancelled)
-                    }
+                    onResult(DeviceCredentialGateResult.Cancelled)
                 }
             }
         )

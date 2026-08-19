@@ -1,38 +1,78 @@
 package org.linphone.ui.main.kidstalk
 
-import org.junit.Assert.assertEquals
-import org.junit.Test
+import kotlin.test.Test
+import kotlin.test.assertEquals
 
 class DeviceCredentialPolicyTest {
     @Test
-    fun `uses the legacy credential intent on protected API 28 and 29 devices`() {
+    fun `secure API 28 device uses the platform credential intent`() {
         assertEquals(
             DeviceCredentialAction.LegacyDeviceCredential,
-            DeviceCredentialPolicy.resolve(apiLevel = 28, isDeviceSecure = true, biometricAvailable = true)
-        )
-        assertEquals(
-            DeviceCredentialAction.LegacyDeviceCredential,
-            DeviceCredentialPolicy.resolve(apiLevel = 29, isDeviceSecure = true, biometricAvailable = false)
+            DeviceCredentialPolicy.resolve(
+                apiLevel = 28,
+                isDeviceSecure = true,
+                combinedCapability = CombinedAuthenticatorCapability.Available
+            )
         )
     }
 
     @Test
-    fun `uses biometric prompt with device credential fallback on protected API 30 plus devices`() {
-        assertEquals(
-            DeviceCredentialAction.BiometricWithDeviceCredentialFallback,
-            DeviceCredentialPolicy.resolve(apiLevel = 30, isDeviceSecure = true, biometricAvailable = true)
-        )
+    fun `secure API 29 device uses the platform credential intent`() {
         assertEquals(
             DeviceCredentialAction.LegacyDeviceCredential,
-            DeviceCredentialPolicy.resolve(apiLevel = 34, isDeviceSecure = true, biometricAvailable = false)
+            DeviceCredentialPolicy.resolve(
+                apiLevel = 29,
+                isDeviceSecure = true,
+                combinedCapability = CombinedAuthenticatorCapability.Available
+            )
         )
     }
 
     @Test
-    fun `proceeds without a fabricated gate when no device credential exists`() {
+    fun `secure API 30 plus device uses combined BiometricPrompt whenever combined capability is available`() {
+        assertEquals(
+            DeviceCredentialAction.CombinedBiometricPrompt,
+            DeviceCredentialPolicy.resolve(
+                apiLevel = 34,
+                isDeviceSecure = true,
+                combinedCapability = CombinedAuthenticatorCapability.Available
+            )
+        )
+    }
+
+    @Test
+    fun `secure API 30 plus device does not require biometric-only availability for combined prompt`() {
+        assertEquals(
+            DeviceCredentialAction.CombinedBiometricPrompt,
+            DeviceCredentialPolicy.resolve(
+                apiLevel = 30,
+                isDeviceSecure = true,
+                combinedCapability = CombinedAuthenticatorCapability.Available
+            )
+        )
+    }
+
+    @Test
+    fun `unavailable combined capability on API 30 plus uses the explicit exceptional fallback`() {
+        assertEquals(
+            DeviceCredentialAction.ExceptionalLegacyDeviceCredential,
+            DeviceCredentialPolicy.resolve(
+                apiLevel = 34,
+                isDeviceSecure = true,
+                combinedCapability = CombinedAuthenticatorCapability.UnknownError
+            )
+        )
+    }
+
+    @Test
+    fun `insecure device does not request authentication`() {
         assertEquals(
             DeviceCredentialAction.ProceedWithoutCredential,
-            DeviceCredentialPolicy.resolve(apiLevel = 34, isDeviceSecure = false, biometricAvailable = true)
+            DeviceCredentialPolicy.resolve(
+                apiLevel = 34,
+                isDeviceSecure = false,
+                combinedCapability = CombinedAuthenticatorCapability.Available
+            )
         )
     }
 }
