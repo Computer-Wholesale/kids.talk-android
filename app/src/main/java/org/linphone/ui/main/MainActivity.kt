@@ -510,36 +510,6 @@ class MainActivity : GenericActivity() {
         }
     }
 
-    private fun handleCallIntent(intent: Intent) {
-        val uri = intent.data?.toString()
-        if (uri.isNullOrEmpty()) {
-            Log.e("$TAG Intent data is null or empty, can't process [${intent.action}] intent")
-            return
-        }
-
-        Log.i("$TAG Found URI [$uri] as data for intent [${intent.action}]")
-        val sipUriToCall = when {
-            uri.startsWith("tel:") -> uri.substring("tel:".length)
-            uri.startsWith("callto:") -> uri.substring("callto:".length)
-            uri.startsWith("sip-linphone:") -> uri.replace("sip-linphone:", "sip:")
-            uri.startsWith("linphone-sip:") -> uri.replace("linphone-sip:", "sip:")
-            uri.startsWith("sips-linphone:") -> uri.replace("sips-linphone:", "sips:")
-            uri.startsWith("linphone-sips:") -> uri.replace("linphone-sips:", "sips:")
-            else -> uri.replace("%40", "@") // Unescape @ character if needed
-        }
-
-        coreContext.postOnCoreThread {
-            val address = coreContext.core.interpretUrl(
-                sipUriToCall,
-                LinphoneUtils.applyInternationalPrefix()
-            )
-            Log.i("$TAG Interpreted SIP URI is [${address?.asStringUriOnly()}]")
-            if (address != null) {
-                coreContext.startAudioCall(address)
-            }
-        }
-    }
-
     private fun handleConfigIntent(uri: String) {
         Log.i("$TAG Trying to parse config intent [$uri] as remote provisioning URL")
         val url = LinphoneUtils.getRemoteProvisioningUrlFromUri(uri)

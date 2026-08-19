@@ -98,6 +98,31 @@ jobs:
           run_gate tasks_all ./gradlew :app:tasks --all --no-daemon --stacktrace
           run_gate test_debug_unit ./gradlew :app:testDebugUnitTest --no-daemon --stacktrace
           summarize_junit
+          run_gate release_merged_manifest ./gradlew :app:processReleaseMainManifest --no-daemon --stacktrace
+          manifest_path=$(find app/build/intermediates -path '*merged_manifests*release*' -name AndroidManifest.xml -print -quit)
+          {
+            audit_status=0
+            echo "RELEASE_MERGED_MANIFEST=${manifest_path}"
+            test -n "${manifest_path}" || audit_status=1
+            ! grep -q 'android.permission.CAMERA' "${manifest_path}" || audit_status=1
+            ! grep -q 'android.permission.FOREGROUND_SERVICE_CAMERA' "${manifest_path}" || audit_status=1
+            ! grep -q 'android.hardware.camera' "${manifest_path}" || audit_status=1
+            grep -q 'android.permission.MANAGE_OWN_CALLS' "${manifest_path}" || audit_status=1
+            grep -q 'android.permission.FOREGROUND_SERVICE_PHONE_CALL' "${manifest_path}" || audit_status=1
+            grep -q 'android.permission.FOREGROUND_SERVICE_MICROPHONE' "${manifest_path}" || audit_status=1
+            grep -q 'foregroundServiceType="phoneCall|microphone"' "${manifest_path}" || audit_status=1
+            exit "${audit_status}"
+          } | tee ci-artifacts/release_merged_manifest_audit.log
+          manifest_audit_status=${PIPESTATUS[0]}
+          echo "${manifest_audit_status}" > ci-artifacts/release_merged_manifest_audit.status
+          if [ "${manifest_audit_status}" -ne 0 ]; then status=1; fi
+          {
+            ! git grep -nE 'sip-linphone:|linphone-sip:|sips-linphone:|linphone-sips:' -- app/src/main/java
+          } | tee ci-artifacts/legacy_uri_alias_audit.log
+          legacy_alias_status=${PIPESTATUS[0]}
+          echo "${legacy_alias_status}" > ci-artifacts/legacy_uri_alias_audit.status
+          if [ "${legacy_alias_status}" -ne 0 ]; then status=1; fi
+          summarize_junit
           run_gate compile_release_kotlin ./gradlew :app:compileReleaseKotlin --no-daemon --stacktrace
           run_gate android_lint ./gradlew :app:lint --no-daemon --stacktrace
           run_gate minify_release_r8 ./gradlew :app:minifyReleaseWithR8 --no-daemon --stacktrace
