@@ -7,6 +7,7 @@ import androidx.test.espresso.Espresso.onView
 import androidx.test.espresso.action.ViewActions.closeSoftKeyboard
 import androidx.test.espresso.action.ViewActions.click
 import androidx.test.espresso.action.ViewActions.replaceText
+import androidx.test.espresso.action.ViewActions.scrollTo
 import androidx.test.espresso.assertion.ViewAssertions.matches
 import androidx.test.espresso.matcher.ViewMatchers.isDisplayed
 import androidx.test.espresso.matcher.ViewMatchers.isEnabled
@@ -39,9 +40,9 @@ class KidsTalkCallFragmentInstrumentedTest {
             Intent(ApplicationProvider.getApplicationContext(), KidsTalkFragmentTestHostActivity::class.java)
                 .putExtra("has_contact", false)
         ).use {
-            onView(withId(org.linphone.R.id.setup_name_input)).perform(replaceText("Household contact"))
-            onView(withId(org.linphone.R.id.setup_number_input)).perform(replaceText("512345"), closeSoftKeyboard())
-            onView(withId(org.linphone.R.id.save_contact_button)).check(matches(isEnabled())).perform(click())
+            onView(withId(org.linphone.R.id.setup_name_input)).perform(scrollTo(), replaceText("Household contact"))
+            onView(withId(org.linphone.R.id.setup_number_input)).perform(scrollTo(), replaceText("512345"), closeSoftKeyboard())
+            onView(withId(org.linphone.R.id.save_contact_button)).perform(scrollTo()).check(matches(isEnabled())).perform(click())
             onView(withId(org.linphone.R.id.call_view)).check(matches(isDisplayed()))
             onView(withId(org.linphone.R.id.call_button)).check(matches(isDisplayed()))
         }
@@ -54,7 +55,7 @@ class KidsTalkCallFragmentInstrumentedTest {
                 .putExtra("has_contact", true)
                 .putExtra("credential_result", "authorized")
         ).use {
-            onView(withId(org.linphone.R.id.change_contact_button)).perform(click())
+            onView(withId(org.linphone.R.id.change_contact_button)).perform(scrollTo(), click())
             onView(withId(org.linphone.R.id.setup_view)).check(matches(isDisplayed()))
         }
     }
@@ -66,7 +67,7 @@ class KidsTalkCallFragmentInstrumentedTest {
                 .putExtra("has_contact", true)
                 .putExtra("credential_result", "no_device_credential")
         ).use {
-            onView(withId(org.linphone.R.id.change_contact_button)).perform(click())
+            onView(withId(org.linphone.R.id.change_contact_button)).perform(scrollTo(), click())
             onView(withId(org.linphone.R.id.setup_view)).check(matches(isDisplayed()))
         }
     }
@@ -78,7 +79,7 @@ class KidsTalkCallFragmentInstrumentedTest {
                 .putExtra("has_contact", true)
                 .putExtra("credential_result", "cancelled")
         ).use {
-            onView(withId(org.linphone.R.id.change_contact_button)).perform(click())
+            onView(withId(org.linphone.R.id.change_contact_button)).perform(scrollTo(), click())
             onView(withId(org.linphone.R.id.call_view)).check(matches(isDisplayed()))
         }
     }
@@ -90,7 +91,7 @@ class KidsTalkCallFragmentInstrumentedTest {
                 .putExtra("has_contact", true)
         )
         scenario.use {
-            onView(withId(org.linphone.R.id.call_button)).perform(click())
+            onView(withId(org.linphone.R.id.call_button)).perform(scrollTo(), click())
             scenario.onActivity { activity ->
                 assertEquals("512345", activity.lastValidatedCallExtension)
             }
