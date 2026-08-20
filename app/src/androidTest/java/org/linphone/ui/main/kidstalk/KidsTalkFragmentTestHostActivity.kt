@@ -8,6 +8,9 @@ class KidsTalkFragmentTestHostActivity : FragmentActivity() {
         super.onCreate(savedInstanceState)
         if (savedInstanceState == null) {
             val managed = intent.getBooleanExtra("managed", false)
+            val credentialResult = intent.getStringExtra("credential_result")
+                ?.let(DeviceCredentialGateResult::valueOf)
+                ?: DeviceCredentialGateResult.Authorized
             val contact = if (intent.getBooleanExtra("has_contact", false)) {
                 KidsTalkContact("Household contact", "512345")
             } else {
@@ -26,11 +29,17 @@ class KidsTalkFragmentTestHostActivity : FragmentActivity() {
             }
             val fragment = KidsTalkCallFragment().apply {
                 installTestDependencies(
-                    KidsTalkCallTestDependencies(store) { callback ->
-                        object : DeviceCredentialGate {
-                            override fun requestAuthorization() = callback(DeviceCredentialGateResult.Authorized)
+                    KidsTalkCallTestDependencies(
+                        contactStore = store,
+                        credentialGateFactory = { callback ->
+                            object : DeviceCredentialGate {
+                                override fun requestAuthorization() = callback(credentialResult)
+                            }
+                        },
+                        callAction = object : KidsTalkCallAction {
+                            override fun placeValidatedExtension(extension: String): Boolean = true
                         }
-                    }
+                    )
                 )
             }
             supportFragmentManager.beginTransaction().replace(android.R.id.content, fragment).commitNow()

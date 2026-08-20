@@ -63,6 +63,7 @@ import org.linphone.ui.setup.KidsTalkSetupActivity
 import org.linphone.utils.PasswordDialogModel
 import org.linphone.utils.ShortcutUtils
 import org.linphone.ui.sso.SingleSignOnActivity
+import org.linphone.ui.main.kidstalk.KidsTalkExternalIntentPolicy
 import org.linphone.ui.main.viewmodel.MainViewModel
 import org.linphone.ui.main.viewmodel.SharedMainViewModel
 import org.linphone.utils.AppUtils
@@ -174,8 +175,8 @@ class MainActivity : GenericActivity() {
 
         while (!coreContext.isReady()) {
             Thread.sleep(50)
-        ShortcutUtils.disableConversationShortcuts(this)
         }
+        ShortcutUtils.disableConversationShortcuts(this)
 
         viewModel = run {
             ViewModelProvider(this)[MainViewModel::class.java]
@@ -488,8 +489,8 @@ class MainActivity : GenericActivity() {
     }
 
     private fun handleIntent(intent: Intent) {
-        if (intent.action != Intent.ACTION_MAIN && intent.action != null) {
-            Log.i("$TAG Ignoring unsupported intent action [${intent.action}] in the single-contact experience")
+        if (KidsTalkExternalIntentPolicy.containsExternalInput(intent.action, intent.data?.scheme)) {
+            Log.i("$TAG Ignoring unsupported external intent in the single-contact experience")
         }
         handleMainIntent()
     }
