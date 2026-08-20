@@ -76,7 +76,7 @@ class KidsTalkScaleLayoutInstrumentedTest {
         val screenshot = instrumentation.uiAutomation.takeScreenshot()
             ?: throw AssertionError("I-10/I-11 $state screenshot must be captured")
         val evidenceDirectory = File(
-            instrumentation.targetContext.getExternalFilesDir(null),
+            instrumentation.targetContext.filesDir,
             "kid394-scale-evidence"
         ).apply { mkdirs() }
         FileOutputStream(File(evidenceDirectory, "$state.png")).use { output ->
