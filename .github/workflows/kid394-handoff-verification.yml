@@ -6,6 +6,7 @@ on:
     branches:
       - integration/kid394-handoff-evidence
       - integration/kid394-qa-remediation
+      - integration/kid394-remediation-hosted
 
 permissions:
   contents: read
