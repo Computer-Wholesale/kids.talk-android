@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # Executes one API-35 KID-394 emulator attempt. Exit code 75 is reserved for
-# emulator infrastructure loss after the test command starts.
+# emulator infrastructure loss or an invalid hostile-scale test geometry.
 set -u -o pipefail
 
 attempt="${1:?attempt name is required}"
@@ -10,6 +10,8 @@ diagnostics_dir="$evidence_root/diagnostics/$attempt"
 gradle_log="$evidence_root/gradle/$attempt-connectedDebugAndroidTest.log"
 scale_evidence_dir="$evidence_root/scale-evidence/$attempt"
 status_file="$evidence_root/$attempt.exit-code"
+profile_name="Nexus 6"
+minimum_logical_width_dp=320
 
 mkdir -p "$diagnostics_dir" "$(dirname "$gradle_log")" "$scale_evidence_dir"
 
@@ -51,6 +53,53 @@ capture_boot_preflight() {
     else
         printf '%s\n' 'sdkmanager not found after emulator setup' > "$diagnostics_dir/sdk-packages.txt"
     fi
+}
+
+record_geometry_preflight() {
+    local reported_size reported_density effective_size effective_density width_px height_px width_dp height_dp
+
+    reported_size="$(adb shell wm size | tr -d '\r')"
+    reported_density="$(adb shell wm density | tr -d '\r')"
+    effective_size="$(printf '%s\n' "$reported_size" | awk -F': ' '/Override size/ {print $2; found=1} END {if (!found) exit 1}')" || \
+        effective_size="$(printf '%s\n' "$reported_size" | awk -F': ' '/Physical size/ {print $2; exit}')"
+    effective_density="$(printf '%s\n' "$reported_density" | awk -F': ' '/Override density/ {print $2; found=1} END {if (!found) exit 1}')" || \
+        effective_density="$(printf '%s\n' "$reported_density" | awk -F': ' '/Physical density/ {print $2; exit}')"
+
+    width_px="${effective_size%x*}"
+    height_px="${effective_size#*x}"
+    if ! [[ "$width_px" =~ ^[0-9]+$ && "$height_px" =~ ^[0-9]+$ && "$effective_density" =~ ^[0-9]+$ ]] || [ "$effective_density" -le 0 ]; then
+        {
+            printf 'profile=%s\n' "$profile_name"
+            printf 'font_scale=%s\n' "$(adb shell settings get system font_scale | tr -d '\r')"
+            printf 'wm_size=%s\n' "$reported_size"
+            printf 'wm_density=%s\n' "$reported_density"
+            printf 'geometry_status=invalid\n'
+        } > "$diagnostics_dir/geometry-preflight.txt"
+        return 75
+    fi
+
+    width_dp="$(awk -v px="$width_px" -v density="$effective_density" 'BEGIN { printf "%.2f", px * 160 / density }')"
+    height_dp="$(awk -v px="$height_px" -v density="$effective_density" 'BEGIN { printf "%.2f", px * 160 / density }')"
+    {
+        printf 'profile=%s\n' "$profile_name"
+        printf 'font_scale=%s\n' "$(adb shell settings get system font_scale | tr -d '\r')"
+        printf 'wm_size=%s\n' "$reported_size"
+        printf 'wm_density=%s\n' "$reported_density"
+        printf 'effective_width_px=%s\n' "$width_px"
+        printf 'effective_height_px=%s\n' "$height_px"
+        printf 'effective_density_dpi=%s\n' "$effective_density"
+        printf 'logical_width_dp=%s\n' "$width_dp"
+        printf 'logical_height_dp=%s\n' "$height_dp"
+        printf 'minimum_logical_width_dp=%s\n' "$minimum_logical_width_dp"
+    } > "$diagnostics_dir/geometry-preflight.txt"
+
+    if awk -v width="$width_dp" -v minimum="$minimum_logical_width_dp" 'BEGIN { exit !(width >= minimum) }'; then
+        printf 'geometry_status=valid\n' >> "$diagnostics_dir/geometry-preflight.txt"
+        return 0
+    fi
+
+    printf 'geometry_status=below-minimum-logical-width\n' >> "$diagnostics_dir/geometry-preflight.txt"
+    return 75
 }
 
 restore_settings() {
@@ -108,6 +157,10 @@ adb shell settings put system font_scale 1.30
 adb shell wm density 560
 adb shell settings get system font_scale > "$diagnostics_dir/font-scale-configured.txt"
 adb shell wm density > "$diagnostics_dir/density-configured.txt"
+
+if ! record_geometry_preflight; then
+    exit 75
+fi
 
 test_started=true
 set +e

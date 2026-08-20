@@ -4,6 +4,7 @@ on:
   push:
     branches:
       - defect/KID-394-acceptance-remediation
+      - defect/KID-394-hostile-scale-visual-remediation
       - integration/kid394-qa-remediation
       - integration/kid394-remediation-hosted
   workflow_dispatch:
@@ -63,6 +64,7 @@ jobs:
           api-level: 35
           target: google_apis
           arch: x86_64
+          profile: Nexus 6
           avd-name: kid394-primary
           force-avd-creation: true
           emulator-options: -no-window -no-audio -no-boot-anim -gpu swiftshader_indirect -no-snapshot -no-snapshot-save
@@ -96,6 +98,7 @@ jobs:
           api-level: 35
           target: google_apis
           arch: x86_64
+          profile: Nexus 6
           avd-name: kid394-retry
           force-avd-creation: true
           emulator-options: -no-window -no-audio -no-boot-anim -gpu swiftshader_indirect -no-snapshot -no-snapshot-save
