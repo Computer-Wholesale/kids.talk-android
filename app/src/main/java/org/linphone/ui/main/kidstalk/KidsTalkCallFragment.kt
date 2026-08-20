@@ -33,6 +33,7 @@ class KidsTalkCallFragment : Fragment() {
     private lateinit var saveContactButton: Button
     private lateinit var credentialGate: DeviceCredentialGate
     private lateinit var contactRepository: KidsTalkContactStore
+    private lateinit var callAction: KidsTalkCallAction
 
     private var testDependencies: KidsTalkCallTestDependencies? = null
     private var effectiveContact: ResolvedKidsTalkContact? = null
@@ -64,6 +65,16 @@ class KidsTalkCallFragment : Fragment() {
             ?: KidsTalkContactRepository(requireContext().applicationContext)
         credentialGate = dependencies?.credentialGateFactory(::onContactChangeAuthorization)
             ?: AndroidDeviceCredentialGate(this, ::onContactChangeAuthorization)
+        callAction = dependencies?.callAction ?: object : KidsTalkCallAction {
+            override fun placeValidatedExtension(extension: String): Boolean {
+                val core = coreContext.core
+                if (core.defaultAccount?.state != RegistrationState.Ok) return false
+                val address = core.interpretUrl(KidsTalkSipEndpoint.addressForExtension(extension), false)
+                    ?: return false
+                coreContext.startCall(address)
+                return true
+            }
+        }
 
         val watcher = object : TextWatcher {
             override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) = Unit
@@ -158,17 +169,8 @@ class KidsTalkCallFragment : Fragment() {
 
     private fun placeCall() {
         val contact = effectiveContact?.contact ?: return
-        val core = coreContext.core
-        if (core.defaultAccount?.state != RegistrationState.Ok) {
+        if (!callAction.placeValidatedExtension(contact.extension)) {
             Toast.makeText(requireContext(), getString(R.string.kt_call_not_ready), Toast.LENGTH_SHORT).show()
-            return
         }
-        // Internal extensions are validated locally; do not apply an international prefix.
-        val address = core.interpretUrl(KidsTalkSipEndpoint.addressForExtension(contact.extension), false)
-        if (address == null) {
-            Toast.makeText(requireContext(), getString(R.string.kt_call_failed), Toast.LENGTH_SHORT).show()
-            return
-        }
-        coreContext.startCall(address)
     }
 }
