@@ -2,7 +2,7 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
     <application>
         <activity
-            android:name=".ui.main.kidstalk.KidsTalkFragmentTestHostActivity"
+            android:name="org.linphone.ui.main.kidstalk.KidsTalkFragmentTestHostActivity"
             android:exported="false" />
     </application>
 </manifest>
