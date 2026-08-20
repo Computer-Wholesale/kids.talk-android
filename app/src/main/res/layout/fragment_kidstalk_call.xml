@@ -3,94 +3,102 @@
   Kids.Talk — Single Contact Call Screen layout.
   Shows either the call_view (big call button) or setup_view (contact entry form).
 -->
-<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<androidx.core.widget.NestedScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/kids_talk_scroll_container"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:padding="24dp">
+    android:fillViewport="true">
 
-    <!-- Call view: shown when a contact is already saved -->
-    <LinearLayout
-        android:id="@+id/call_view"
+    <FrameLayout
         android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:gravity="center"
-        android:orientation="vertical"
-        android:visibility="gone">
+        android:layout_height="wrap_content"
+        android:padding="24dp">
 
-        <TextView
-            android:id="@+id/contact_name_label"
+        <!-- Call view: shown when a contact is already saved -->
+        <LinearLayout
+            android:id="@+id/call_view"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:ellipsize="end"
+            android:layout_gravity="center"
             android:gravity="center"
-            android:maxLines="2"
-            android:textSize="28sp"
-            android:textStyle="bold"
-            android:layout_marginBottom="32dp" />
+            android:orientation="vertical"
+            android:visibility="gone">
 
-        <Button
-            android:id="@+id/call_button"
+            <TextView
+                android:id="@+id/contact_name_label"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="32dp"
+                android:ellipsize="end"
+                android:gravity="center"
+                android:maxLines="2"
+                android:textSize="28sp"
+                android:textStyle="bold" />
+
+            <Button
+                android:id="@+id/call_button"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:minHeight="96dp"
+                android:maxLines="2"
+                android:text="@string/kt_call_button"
+                android:textSize="24sp" />
+
+            <Button
+                android:id="@+id/change_contact_button"
+                style="?attr/borderlessButtonStyle"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="24dp"
+                android:text="@string/kt_change_contact" />
+        </LinearLayout>
+
+        <!-- Setup view: shown when no contact is configured -->
+        <LinearLayout
+            android:id="@+id/setup_view"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:minHeight="96dp"
-            android:maxLines="2"
-            android:text="@string/kt_call_button"
-            android:textSize="24sp" />
+            android:layout_gravity="center"
+            android:gravity="center"
+            android:orientation="vertical"
+            android:visibility="gone">
 
-        <Button
-            android:id="@+id/change_contact_button"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="24dp"
-            android:text="@string/kt_change_contact"
-            style="?attr/borderlessButtonStyle" />
-    </LinearLayout>
+            <TextView
+                android:id="@+id/setup_name_label"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:labelFor="@id/setup_name_input"
+                android:text="@string/kt_contact_name_label" />
 
-    <!-- Setup view: shown when no contact is configured -->
-    <LinearLayout
-        android:id="@+id/setup_view"
-        android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:gravity="center"
-        android:orientation="vertical"
-        android:visibility="gone">
+            <EditText
+                android:id="@+id/setup_name_input"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="16dp"
+                android:hint="@string/kt_contact_name_hint"
+                android:inputType="textPersonName" />
 
-        <TextView
-            android:id="@+id/setup_name_label"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:labelFor="@id/setup_name_input"
-            android:text="@string/kt_contact_name_label" />
+            <TextView
+                android:id="@+id/setup_number_label"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:labelFor="@id/setup_number_input"
+                android:text="@string/kt_contact_extension_label" />
 
-        <EditText
-            android:id="@+id/setup_name_input"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:hint="@string/kt_contact_name_hint"
-            android:inputType="textPersonName"
-            android:layout_marginBottom="16dp" />
+            <EditText
+                android:id="@+id/setup_number_input"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="24dp"
+                android:hint="@string/kt_contact_number_hint"
+                android:inputType="phone" />
 
-        <TextView
-            android:id="@+id/setup_number_label"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:labelFor="@id/setup_number_input"
-            android:text="@string/kt_contact_extension_label" />
-
-        <EditText
-            android:id="@+id/setup_number_input"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:hint="@string/kt_contact_number_hint"
-            android:inputType="phone"
-            android:layout_marginBottom="24dp" />
-
-        <Button
-            android:id="@+id/save_contact_button"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="@string/kt_save_contact"
-            android:enabled="false" />
-    </LinearLayout>
-
-</FrameLayout>
+            <Button
+                android:id="@+id/save_contact_button"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:enabled="false"
+                android:text="@string/kt_save_contact" />
+        </LinearLayout>
+    </FrameLayout>
+</androidx.core.widget.NestedScrollView>
