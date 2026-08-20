@@ -2,6 +2,7 @@ package org.linphone.ui.main.kidstalk
 
 import android.content.Intent
 import android.graphics.Rect
+import android.os.ParcelFileDescriptor
 import android.view.View
 import androidx.core.widget.NestedScrollView
 import androidx.test.core.app.ActivityScenario
@@ -19,8 +20,6 @@ import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.junit.Test
 import org.junit.runner.RunWith
-import java.io.File
-import java.io.FileOutputStream
 
 @RunWith(AndroidJUnit4::class)
 class KidsTalkScaleLayoutInstrumentedTest {
@@ -72,17 +71,17 @@ class KidsTalkScaleLayoutInstrumentedTest {
     }
 
     private fun captureScaleEvidence(state: String) {
-        val instrumentation = InstrumentationRegistry.getInstrumentation()
-        val screenshot = instrumentation.uiAutomation.takeScreenshot()
-            ?: throw AssertionError("I-10/I-11 $state screenshot must be captured")
-        val evidenceDirectory = File(
-            instrumentation.targetContext.filesDir,
-            "kid394-scale-evidence"
-        ).apply { mkdirs() }
-        FileOutputStream(File(evidenceDirectory, "$state.png")).use { output ->
-            assertTrue("I-10/I-11 $state screenshot must be written", screenshot.compress(android.graphics.Bitmap.CompressFormat.PNG, 100, output))
-        }
-        screenshot.recycle()
+        val uiAutomation = InstrumentationRegistry.getInstrumentation().uiAutomation
+        ParcelFileDescriptor.AutoCloseInputStream(
+            uiAutomation.executeShellCommand("mkdir -p /sdcard/kid394-scale-evidence")
+        ).close()
+        ParcelFileDescriptor.AutoCloseInputStream(
+            uiAutomation.executeShellCommand("screencap -p /sdcard/kid394-scale-evidence/$state.png")
+        ).close()
+        val result = ParcelFileDescriptor.AutoCloseInputStream(
+            uiAutomation.executeShellCommand("test -s /sdcard/kid394-scale-evidence/$state.png && echo captured")
+        ).bufferedReader().use { it.readText().trim() }
+        assertEquals("I-10/I-11 $state screenshot must be captured", "captured", result)
     }
 
     private fun assertHostileScale(scenario: ActivityScenario<KidsTalkFragmentTestHostActivity>) {
