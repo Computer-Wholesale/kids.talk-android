@@ -33,15 +33,7 @@ capture_diagnostics() {
 
 export_scale_evidence() {
     set +e
-    : > "$diagnostics_dir/scale-evidence-pull.txt"
-    for evidence_name in setup-state call-state; do
-        if adb exec-out run-as com.kidstalk.phone cat "files/kid394-scale-evidence/$evidence_name.png" > "$scale_evidence_dir/$evidence_name.png" 2>> "$diagnostics_dir/scale-evidence-pull.txt"; then
-            printf '%s\n' "exported $evidence_name.png" >> "$diagnostics_dir/scale-evidence-pull.txt"
-        else
-            rm -f "$scale_evidence_dir/$evidence_name.png"
-            printf '%s\n' "missing $evidence_name.png" >> "$diagnostics_dir/scale-evidence-pull.txt"
-        fi
-    done
+    adb pull /sdcard/kid394-scale-evidence "$scale_evidence_dir" > "$diagnostics_dir/scale-evidence-pull.txt" 2>&1
 }
 
 capture_boot_preflight() {
