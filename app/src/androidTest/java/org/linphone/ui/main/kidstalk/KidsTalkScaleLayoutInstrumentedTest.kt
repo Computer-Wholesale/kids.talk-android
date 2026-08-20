@@ -3,7 +3,6 @@ package org.linphone.ui.main.kidstalk
 import android.content.Intent
 import android.graphics.Rect
 import android.os.ParcelFileDescriptor
-import android.os.SystemClock
 import android.view.View
 import androidx.core.widget.NestedScrollView
 import androidx.test.core.app.ActivityScenario
@@ -18,6 +17,7 @@ import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.platform.app.InstrumentationRegistry
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
+import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertTrue
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -79,18 +79,9 @@ class KidsTalkScaleLayoutInstrumentedTest {
         ParcelFileDescriptor.AutoCloseInputStream(
             uiAutomation.executeShellCommand("screencap -p /sdcard/kid394-scale-evidence/$state.png")
         ).close()
-        val screenshotCaptured = (1..20).any {
-            val result = ParcelFileDescriptor.AutoCloseInputStream(
-                uiAutomation.executeShellCommand("test -s /sdcard/kid394-scale-evidence/$state.png && echo captured")
-            ).bufferedReader().use { it.readText().trim() }
-            if (result == "captured") {
-                true
-            } else {
-                SystemClock.sleep(50)
-                false
-            }
-        }
-        assertTrue("I-10/I-11 $state screenshot must be captured", screenshotCaptured)
+        val screenshot = uiAutomation.takeScreenshot()
+        assertNotNull("I-10/I-11 $state screenshot must be captured", screenshot)
+        screenshot?.recycle()
     }
 
     private fun assertHostileScale(scenario: ActivityScenario<KidsTalkFragmentTestHostActivity>) {
