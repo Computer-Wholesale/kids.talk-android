@@ -5,6 +5,7 @@ import android.graphics.Rect
 import android.view.View
 import androidx.core.widget.NestedScrollView
 import androidx.test.core.app.ActivityScenario
+import androidx.test.core.app.ApplicationProvider
 import androidx.test.espresso.Espresso.onView
 import androidx.test.espresso.action.ViewActions.scrollTo
 import androidx.test.espresso.assertion.ViewAssertions.matches
@@ -27,7 +28,7 @@ class KidsTalkScaleLayoutInstrumentedTest {
     fun setupControlsAreReachableAndUnclippedAtConfiguredHostileScale() {
         // I-10: the API-35 workflow supplies font_scale=1.30 and density=560.
         ActivityScenario.launch<KidsTalkFragmentTestHostActivity>(
-            Intent(InstrumentationRegistry.getInstrumentation().context, KidsTalkFragmentTestHostActivity::class.java)
+            Intent(ApplicationProvider.getApplicationContext(), KidsTalkFragmentTestHostActivity::class.java)
                 .putExtra("has_contact", false)
         ).use { scenario ->
             assertHostileScale(scenario)
@@ -52,7 +53,7 @@ class KidsTalkScaleLayoutInstrumentedTest {
     fun callControlsAreReachableAndUnclippedAtConfiguredHostileScale() {
         // I-11: the API-35 workflow supplies font_scale=1.30 and density=560.
         ActivityScenario.launch<KidsTalkFragmentTestHostActivity>(
-            Intent(InstrumentationRegistry.getInstrumentation().context, KidsTalkFragmentTestHostActivity::class.java)
+            Intent(ApplicationProvider.getApplicationContext(), KidsTalkFragmentTestHostActivity::class.java)
                 .putExtra("has_contact", true)
         ).use { scenario ->
             assertHostileScale(scenario)
