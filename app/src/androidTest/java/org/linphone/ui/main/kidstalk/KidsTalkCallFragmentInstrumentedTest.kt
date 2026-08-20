@@ -2,7 +2,7 @@ package org.linphone.ui.main.kidstalk
 
 import android.content.Intent
 import androidx.test.core.app.ActivityScenario
-import androidx.test.platform.app.InstrumentationRegistry
+import androidx.test.core.app.ApplicationProvider
 import androidx.test.espresso.Espresso.onView
 import androidx.test.espresso.action.ViewActions.closeSoftKeyboard
 import androidx.test.espresso.action.ViewActions.click
@@ -23,7 +23,7 @@ class KidsTalkCallFragmentInstrumentedTest {
     @Test
     fun noContactShowsLabeledSetupAndDisabledSave() {
         ActivityScenario.launch<KidsTalkFragmentTestHostActivity>(
-            Intent(InstrumentationRegistry.getInstrumentation().context, KidsTalkFragmentTestHostActivity::class.java)
+            Intent(ApplicationProvider.getApplicationContext(), KidsTalkFragmentTestHostActivity::class.java)
                 .putExtra("has_contact", false)
         ).use {
             onView(withId(org.linphone.R.id.setup_view)).check(matches(isDisplayed()))
@@ -36,7 +36,7 @@ class KidsTalkCallFragmentInstrumentedTest {
     @Test
     fun validLocalContactSavesAndShowsCallView() {
         ActivityScenario.launch<KidsTalkFragmentTestHostActivity>(
-            Intent(InstrumentationRegistry.getInstrumentation().context, KidsTalkFragmentTestHostActivity::class.java)
+            Intent(ApplicationProvider.getApplicationContext(), KidsTalkFragmentTestHostActivity::class.java)
                 .putExtra("has_contact", false)
         ).use {
             onView(withId(org.linphone.R.id.setup_name_input)).perform(replaceText("Household contact"))
@@ -50,7 +50,7 @@ class KidsTalkCallFragmentInstrumentedTest {
     @Test
     fun authorisedCredentialAllowsLocalContactChange() {
         ActivityScenario.launch<KidsTalkFragmentTestHostActivity>(
-            Intent(InstrumentationRegistry.getInstrumentation().context, KidsTalkFragmentTestHostActivity::class.java)
+            Intent(ApplicationProvider.getApplicationContext(), KidsTalkFragmentTestHostActivity::class.java)
                 .putExtra("has_contact", true)
                 .putExtra("credential_result", "authorized")
         ).use {
@@ -62,7 +62,7 @@ class KidsTalkCallFragmentInstrumentedTest {
     @Test
     fun noDeviceCredentialShowsSetupAfterNeutralNoticePath() {
         ActivityScenario.launch<KidsTalkFragmentTestHostActivity>(
-            Intent(InstrumentationRegistry.getInstrumentation().context, KidsTalkFragmentTestHostActivity::class.java)
+            Intent(ApplicationProvider.getApplicationContext(), KidsTalkFragmentTestHostActivity::class.java)
                 .putExtra("has_contact", true)
                 .putExtra("credential_result", "no_device_credential")
         ).use {
@@ -74,7 +74,7 @@ class KidsTalkCallFragmentInstrumentedTest {
     @Test
     fun cancelledCredentialKeepsExistingCallView() {
         ActivityScenario.launch<KidsTalkFragmentTestHostActivity>(
-            Intent(InstrumentationRegistry.getInstrumentation().context, KidsTalkFragmentTestHostActivity::class.java)
+            Intent(ApplicationProvider.getApplicationContext(), KidsTalkFragmentTestHostActivity::class.java)
                 .putExtra("has_contact", true)
                 .putExtra("credential_result", "cancelled")
         ).use {
@@ -86,7 +86,7 @@ class KidsTalkCallFragmentInstrumentedTest {
     @Test
     fun oneTapCallUsesValidatedHouseholdExtension() {
         val scenario = ActivityScenario.launch<KidsTalkFragmentTestHostActivity>(
-            Intent(InstrumentationRegistry.getInstrumentation().context, KidsTalkFragmentTestHostActivity::class.java)
+            Intent(ApplicationProvider.getApplicationContext(), KidsTalkFragmentTestHostActivity::class.java)
                 .putExtra("has_contact", true)
         )
         scenario.use {
@@ -101,7 +101,7 @@ class KidsTalkCallFragmentInstrumentedTest {
     fun managedContactRemovalFallsBackToLocalSetup() {
         // I-05: The host models the post-MDM-removal state with neither a managed nor local contact.
         ActivityScenario.launch<KidsTalkFragmentTestHostActivity>(
-            Intent(InstrumentationRegistry.getInstrumentation().context, KidsTalkFragmentTestHostActivity::class.java)
+            Intent(ApplicationProvider.getApplicationContext(), KidsTalkFragmentTestHostActivity::class.java)
                 .putExtra("has_contact", false)
                 .putExtra("managed", false)
         ).use {
@@ -113,7 +113,7 @@ class KidsTalkCallFragmentInstrumentedTest {
     @Test
     fun managedContactHidesChangeControl() {
         ActivityScenario.launch<KidsTalkFragmentTestHostActivity>(
-            Intent(InstrumentationRegistry.getInstrumentation().context, KidsTalkFragmentTestHostActivity::class.java)
+            Intent(ApplicationProvider.getApplicationContext(), KidsTalkFragmentTestHostActivity::class.java)
                 .putExtra("has_contact", true)
                 .putExtra("managed", true)
         ).use {
