@@ -3,7 +3,7 @@ package org.linphone.ui.main.kidstalk
 import android.content.Intent
 import android.graphics.Rect
 import android.os.ParcelFileDescriptor
-import android.view.View
+import android.widget.TextView
 import androidx.core.widget.NestedScrollView
 import androidx.test.core.app.ActivityScenario
 import androidx.test.core.app.ApplicationProvider
@@ -25,49 +25,151 @@ import org.junit.runner.RunWith
 @RunWith(AndroidJUnit4::class)
 class KidsTalkScaleLayoutInstrumentedTest {
     @Test
-    fun setupControlsAreReachableAndUnclippedAtConfiguredHostileScale() {
-        // I-10: the API-35 workflow supplies font_scale=1.30 and density=560.
+    fun setupControlsAreReachableAndLegibleAtConfiguredHostileScale() {
+        // I-10: the API-35 workflow supplies font_scale=1.30 and an explicit phone-class profile.
         ActivityScenario.launch<KidsTalkFragmentTestHostActivity>(
             Intent(ApplicationProvider.getApplicationContext(), KidsTalkFragmentTestHostActivity::class.java)
                 .putExtra("has_contact", false)
         ).use { scenario ->
             assertHostileScale(scenario)
-            listOf(
+            awaitCoherentCheckpoint(scenario)
+            assertPrimaryCheckpoint(
+                scenario,
+                listOf(
                 org.linphone.R.id.setup_name_label,
                 org.linphone.R.id.setup_name_input,
                 org.linphone.R.id.setup_number_label,
                 org.linphone.R.id.setup_number_input,
                 org.linphone.R.id.save_contact_button
-            ).forEach { id ->
-                onView(withId(id)).perform(scrollTo()).check(matches(isDisplayed()))
-                assertFullyVisibleWithinContent(scenario, id)
-            }
+            )
+            )
+            assertRenderedText(scenario, org.linphone.R.id.setup_name_label, org.linphone.R.string.kt_contact_name_label)
+            assertRenderedText(scenario, org.linphone.R.id.setup_number_label, org.linphone.R.string.kt_contact_extension_label)
+            assertRenderedText(scenario, org.linphone.R.id.save_contact_button, org.linphone.R.string.kt_save_contact)
             scenario.onActivity { activity ->
-                assertFalse(activity.findViewById<View>(org.linphone.R.id.save_contact_button).isEnabled)
+                assertFalse(activity.findViewById<TextView>(org.linphone.R.id.save_contact_button).isEnabled)
             }
-            captureScaleEvidence("setup-state")
+            captureScaleEvidence("setup-primary-state")
+            assertReachability(
+                scenario,
+                listOf(
+                org.linphone.R.id.setup_name_label,
+                org.linphone.R.id.setup_name_input,
+                org.linphone.R.id.setup_number_label,
+                org.linphone.R.id.setup_number_input,
+                org.linphone.R.id.save_contact_button
+            )
+            )
         }
     }
 
     @Test
-    fun callControlsAreReachableAndUnclippedAtConfiguredHostileScale() {
-        // I-11: the API-35 workflow supplies font_scale=1.30 and density=560.
+    fun callControlsAreReachableAndLegibleAtConfiguredHostileScale() {
+        // I-11: the API-35 workflow supplies font_scale=1.30 and an explicit phone-class profile.
         ActivityScenario.launch<KidsTalkFragmentTestHostActivity>(
             Intent(ApplicationProvider.getApplicationContext(), KidsTalkFragmentTestHostActivity::class.java)
                 .putExtra("has_contact", true)
         ).use { scenario ->
             assertHostileScale(scenario)
-            listOf(
+            awaitCoherentCheckpoint(scenario)
+            assertPrimaryCheckpoint(
+                scenario,
+                listOf(
+                org.linphone.R.id.contact_name_label,
+                org.linphone.R.id.call_button
+            )
+            )
+            assertRenderedText(scenario, org.linphone.R.id.contact_name_label, "Household contact")
+            assertRenderedText(scenario, org.linphone.R.id.call_button, org.linphone.R.string.kt_call_button)
+            onView(withId(org.linphone.R.id.call_button)).check(matches(isEnabled()))
+            captureScaleEvidence("call-primary-state")
+            assertReachability(
+                scenario,
+                listOf(
                 org.linphone.R.id.contact_name_label,
                 org.linphone.R.id.call_button,
                 org.linphone.R.id.change_contact_button
-            ).forEach { id ->
-                onView(withId(id)).perform(scrollTo()).check(matches(isDisplayed()))
-                assertFullyVisibleWithinContent(scenario, id)
-            }
-            onView(withId(org.linphone.R.id.call_button)).check(matches(isEnabled()))
+            )
+            )
             onView(withId(org.linphone.R.id.change_contact_button)).check(matches(isEnabled()))
-            captureScaleEvidence("call-state")
+        }
+    }
+
+    private fun awaitCoherentCheckpoint(scenario: ActivityScenario<KidsTalkFragmentTestHostActivity>) {
+        InstrumentationRegistry.getInstrumentation().waitForIdleSync()
+        scenario.onActivity { activity ->
+            val scrollContainer = activity.findViewById<NestedScrollView>(org.linphone.R.id.kids_talk_scroll_container)
+            scrollContainer.scrollTo(0, 0)
+            scrollContainer.requestLayout()
+        }
+        InstrumentationRegistry.getInstrumentation().waitForIdleSync()
+    }
+
+    private fun assertPrimaryCheckpoint(
+        scenario: ActivityScenario<KidsTalkFragmentTestHostActivity>,
+        ids: List<Int>
+    ) {
+        ids.forEach { id ->
+            onView(withId(id)).check(matches(isDisplayed()))
+            assertFullyVisibleWithinContent(scenario, id)
+        }
+    }
+
+    private fun assertReachability(
+        scenario: ActivityScenario<KidsTalkFragmentTestHostActivity>,
+        ids: List<Int>
+    ) {
+        ids.forEach { id ->
+            onView(withId(id)).perform(scrollTo()).check(matches(isDisplayed()))
+            assertFullyVisibleWithinContent(scenario, id)
+        }
+    }
+
+    private fun assertRenderedText(
+        scenario: ActivityScenario<KidsTalkFragmentTestHostActivity>,
+        id: Int,
+        expectedStringResource: Int
+    ) {
+        scenario.onActivity { activity ->
+            assertRenderedText(
+                activity.findViewById(id),
+                activity.getString(expectedStringResource),
+                id
+            )
+        }
+    }
+
+    private fun assertRenderedText(
+        scenario: ActivityScenario<KidsTalkFragmentTestHostActivity>,
+        id: Int,
+        expected: String
+    ) {
+        scenario.onActivity { activity ->
+            assertRenderedText(activity.findViewById(id), expected, id)
+        }
+    }
+
+    private fun assertRenderedText(view: TextView, expected: String, id: Int) {
+        assertEquals("I-10/I-11 primary text $id must equal its configured value", expected, view.text.toString())
+        assertTrue("I-10/I-11 primary text $id must have non-zero width", view.width > 0)
+        assertTrue("I-10/I-11 primary text $id must have non-zero height", view.height > 0)
+        assertFalse("I-10/I-11 primary text $id layout must be settled", view.isLayoutRequested)
+        val layout = view.layout
+        assertNotNull("I-10/I-11 primary text $id must have a rendered layout", layout)
+        val contentWidth = view.width - view.compoundPaddingLeft - view.compoundPaddingRight
+        assertTrue("I-10/I-11 primary text $id must have positive content width", contentWidth > 0)
+        layout?.let { renderedLayout ->
+            for (line in 0 until renderedLayout.lineCount) {
+                assertEquals(
+                    "I-10/I-11 primary text $id must not ellipsize line $line",
+                    0,
+                    renderedLayout.getEllipsisCount(line)
+                )
+                assertTrue(
+                    "I-10/I-11 primary text $id line $line must fit its content width",
+                    renderedLayout.getLineWidth(line) <= contentWidth.toFloat() + 0.5f
+                )
+            }
         }
     }
 
@@ -97,8 +199,8 @@ class KidsTalkScaleLayoutInstrumentedTest {
     ) {
         scenario.onActivity { activity ->
             val scrollContainer = activity.findViewById<NestedScrollView>(org.linphone.R.id.kids_talk_scroll_container)
-            val root = activity.findViewById<View>(android.R.id.content)
-            val view = activity.findViewById<View>(id)
+            val root = activity.findViewById<android.view.View>(android.R.id.content)
+            val view = activity.findViewById<android.view.View>(id)
             val rootBounds = Rect().also(root::getGlobalVisibleRect)
             val visibleBounds = Rect()
             val location = IntArray(2)
@@ -114,7 +216,7 @@ class KidsTalkScaleLayoutInstrumentedTest {
             assertEquals("I-10/I-11 control $id must not be clipped", unobscuredBounds, visibleBounds)
             assertTrue("I-10/I-11 control $id must fit horizontally", rootBounds.contains(visibleBounds.left, visibleBounds.top))
             assertTrue("I-10/I-11 control $id must fit vertically", rootBounds.contains(visibleBounds.right - 1, visibleBounds.bottom - 1))
-            assertTrue("I-10/I-11 scroll container must remain shown", scrollContainer.visibility == View.VISIBLE)
+            assertTrue("I-10/I-11 scroll container must remain shown", scrollContainer.visibility == android.view.View.VISIBLE)
         }
     }
 }
