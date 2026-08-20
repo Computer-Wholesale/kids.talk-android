@@ -4,13 +4,18 @@ import android.os.Bundle
 import androidx.fragment.app.FragmentActivity
 
 class KidsTalkFragmentTestHostActivity : FragmentActivity() {
+    var lastValidatedCallExtension: String? = null
+        private set
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         if (savedInstanceState == null) {
             val managed = intent.getBooleanExtra("managed", false)
-            val credentialResult = intent.getStringExtra("credential_result")
-                ?.let(DeviceCredentialGateResult::valueOf)
-                ?: DeviceCredentialGateResult.Authorized
+            val credentialResult = when (intent.getStringExtra("credential_result")) {
+                "no_device_credential" -> DeviceCredentialGateResult.NoDeviceCredential
+                "cancelled" -> DeviceCredentialGateResult.Cancelled
+                else -> DeviceCredentialGateResult.Authorized
+            }
             val contact = if (intent.getBooleanExtra("has_contact", false)) {
                 KidsTalkContact("Household contact", "512345")
             } else {
@@ -18,10 +23,13 @@ class KidsTalkFragmentTestHostActivity : FragmentActivity() {
             }
             val store = object : KidsTalkContactStore {
                 private var local = if (managed) null else contact
+
                 override fun resolve(): ResolvedKidsTalkContact? = contact?.let {
                     ResolvedKidsTalkContact(it, isManaged = managed)
                 } ?: local?.let { ResolvedKidsTalkContact(it, isManaged = false) }
+
                 override fun loadLocalContact(): KidsTalkContact? = local
+
                 override fun saveLocal(contact: KidsTalkContact): Boolean {
                     local = contact
                     return true
@@ -37,7 +45,10 @@ class KidsTalkFragmentTestHostActivity : FragmentActivity() {
                             }
                         },
                         callAction = object : KidsTalkCallAction {
-                            override fun placeValidatedExtension(extension: String): Boolean = true
+                            override fun placeValidatedExtension(extension: String): Boolean {
+                                lastValidatedCallExtension = extension
+                                return true
+                            }
                         }
                     )
                 )
