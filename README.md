@@ -38,9 +38,23 @@ cd kids.talk-android
 
 The APK will be output to `app/build/outputs/apk/debug/`.
 
-### Release builds
+### Firebase client configuration
 
-A `google-services.json` file is required for Firebase Cloud Messaging (incoming call push notifications). This file is not included in the repository. Contact the Kids.Talk service operator to obtain credentials for your deployment.
+`app/google-services.json` is deliberately excluded from this repository. Normal non-production builds run without Firebase Cloud Messaging (FCM), which prevents an accidental fallback to the prior upstream Firebase project.
+
+For a local non-production FCM experiment, obtain a **non-production** Firebase Console–downloaded Android client configuration from the Kids.Talk service operator and place it at `app/google-services.json` without staging it. Never copy a protected UAT configuration into the repository or commit it. The KID-407 verifier below confirms the required project, Android package, and sender identifiers while redacting API-key values:
+
+```bash
+python3 scripts/kid407_verify_firebase_contract.py --repository-root . --mode supplied --config app/google-services.json
+```
+
+Without a supplied local configuration, verify the intentional no-FCM path with:
+
+```bash
+python3 scripts/kid407_verify_firebase_contract.py --repository-root . --mode no-fcm --config app/google-services.json
+```
+
+Protected UAT configuration is materialised only by the protected CI workflow and is removed unconditionally after the job. It is not a developer bootstrap file.
 
 ## Source publication
 
