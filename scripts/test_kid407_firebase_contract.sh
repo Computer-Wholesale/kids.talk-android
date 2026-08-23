@@ -102,4 +102,13 @@ if grep -Fq 'test-key-not-real' "${temporary_directory}/invalid-output"; then
   exit 1
 fi
 
+for generic_workflow in \
+  "${repository_root}/.github/workflows/kid394-handoff-verification.yml" \
+  "${repository_root}/.github/workflows/kid394-emulator.yml"; do
+  if grep -Eq 'cat[[:space:]]+>[[:space:]]*app/google-services\.json|<<[[:space:]]*.*JSON' "${generic_workflow}"; then
+    printf 'Generic verification workflow must not manufacture app/google-services.json: %s\n' "${generic_workflow}" >&2
+    exit 1
+  fi
+done
+
 printf 'KID407_FIREBASE_CONTRACT_TESTS=PASS\n'

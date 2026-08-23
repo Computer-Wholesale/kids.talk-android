@@ -32,12 +32,6 @@ jobs:
           sudo udevadm control --reload-rules
           sudo udevadm trigger --name-match=kvm
 
-      - name: Prepare non-secret Firebase configuration
-        run: |
-          cat > app/google-services.json <<'JSON'
-          {"project_info":{"project_number":"0","project_id":"kidstalk-ci","storage_bucket":"kidstalk-ci.appspot.com"},"client":[{"client_info":{"mobilesdk_app_id":"1:0:android:0","android_client_info":{"package_name":"com.kidstalk.phone"}},"oauth_client":[],"api_key":[{"current_key":"CI_PLACEHOLDER"}],"services":{"appinvite_service":{"other_platform_oauth_client":[]}}}],"configuration_version":"1"}
-          JSON
-
       - name: Record API 35 preflight diagnostics
         run: |
           set -euo pipefail
