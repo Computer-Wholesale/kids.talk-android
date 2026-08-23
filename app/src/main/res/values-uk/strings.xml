@@ -177,7 +177,6 @@
     <string name="content_description_contact_online">Контакт в мережі</string>
     <string name="content_description_show_popup_menu">Відобразити меню</string>
     <string name="content_description_click_to_remove_participant">Натисніть, щоб видалити учасника</string>
-    <string name="settings_advanced_print_logs_crashlytics_title">Допоможіть розробникам вирішувати проблеми, надсилаючи логи до Crashlytics після збою</string>
     <string name="settings_advanced_upload_server_url">URL-адреса сервера обміну файлами</string>
     <string name="settings_advanced_logs_upload_server_url">URL-адреса сервера обміну логами</string>
     <string name="conference_active_speaker_is_screen_sharing">ділитись своїм екраном</string>

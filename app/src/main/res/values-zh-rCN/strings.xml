@@ -755,7 +755,6 @@
     <string name="content_description_go_to_conversation">转到聊天</string>
     <string name="content_description_voicemail_available">语音信息可用</string>
     <string name="sip_address">SIP地址</string>
-    <string name="settings_advanced_print_logs_crashlytics_title">通过在崩溃后向Crashlytics发送日志来帮助开发人员解决问题</string>
     <string name="manage_account_status_connected_summary">这个账户在线，大家可以和您通话。</string>
     <string name="manage_account_dialog_international_prefix_help_message">选择您的国家以允许&appName;匹配您的联系人。</string>
     <string name="dialog_do_not_show_anymore">不再显示此对话框</string>

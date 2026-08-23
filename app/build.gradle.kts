@@ -1,6 +1,4 @@
 import com.android.build.gradle.internal.tasks.factory.dependsOn
-import com.google.firebase.crashlytics.buildtools.gradle.CrashlyticsExtension
-import com.google.firebase.crashlytics.buildtools.gradle.CrashlyticsPlugin
 import com.google.gms.googleservices.GoogleServicesPlugin
 import java.io.BufferedReader
 import java.io.FileInputStream
@@ -19,22 +17,13 @@ val useDifferentPackageNameForDebugBuild = false
 
 val sdkPath = providers.gradleProperty("LinphoneSdkBuildDir").get()
 val googleServices = File(projectDir.absolutePath + "/google-services.json")
-val linphoneLibs = File("$sdkPath/libs/")
-val linphoneDebugLibs = File("$sdkPath/libs-debug/")
 val firebaseCloudMessagingAvailable = googleServices.exists()
-val crashlyticsAvailable = googleServices.exists() && linphoneLibs.exists() && linphoneDebugLibs.exists()
 
 if (firebaseCloudMessagingAvailable) {
     println("google-services.json found, enabling Firebase CloudMessaging feature")
     apply<GoogleServicesPlugin>()
 } else {
     println("google-services.json not found, disabling Firebase CloudMessaging feature")
-}
-if (crashlyticsAvailable) {
-    println("google-services.json found and Linphone SDK libs-debug folder found, enabling Crashlytics feature")
-    apply<CrashlyticsPlugin>()
-} else {
-    println("Crashlytics has been disabled because either google-services.json file wasn't found or local Linphone SDK build folder isn't configured")
 }
 
 var gitVersion = "6.3.0-alpha"
@@ -129,20 +118,22 @@ android {
 
     val keystorePropertiesFile = rootProject.file("keystore.properties")
     val keystoreProperties = Properties()
-    keystoreProperties.load(FileInputStream(keystorePropertiesFile))
+    if (keystorePropertiesFile.exists()) {
+        keystoreProperties.load(FileInputStream(keystorePropertiesFile))
+    }
 
     signingConfigs {
         create("release") {
-            val keyStorePath = keystoreProperties["storeFile"] as String
-            val keyStore = project.file(keyStorePath)
-            if (keyStore.exists()) {
+            val keyStorePath = keystoreProperties["storeFile"] as? String ?: ""
+            val keyStore = if (keyStorePath.isNotEmpty()) project.file(keyStorePath) else null
+            if (keyStore != null && keyStore.exists()) {
                 storeFile = keyStore
                 storePassword = keystoreProperties["storePassword"] as String
                 keyAlias = keystoreProperties["keyAlias"] as String
                 keyPassword = keystoreProperties["keyPassword"] as String
                 println("Signing config release is using keystore [$storeFile]")
             } else {
-                println("Keystore [$storeFile] doesn't exists!")
+                println("Keystore not configured — release build will be unsigned")
             }
         }
     }
@@ -167,14 +158,8 @@ android {
             }
             resValue("string", "linphone_openid_callback_scheme", packageName)
 
-            if (crashlyticsAvailable) {
-                val path = File("$sdkPath/libs-debug/").toString()
-                configure<CrashlyticsExtension> {
-                    nativeSymbolUploadEnabled = true
-                    unstrippedNativeLibsDir = path
-                }
-            }
-            buildConfigField("Boolean", "CRASHLYTICS_ENABLED", crashlyticsAvailable.toString())
+            // Kids.Talk: Crashlytics removed (KID-269) — data minimisation
+            buildConfigField("Boolean", "CRASHLYTICS_ENABLED", "false")
         }
 
         getByName("release") {
@@ -194,14 +179,8 @@ android {
             resValue("string", "file_provider", "$packageName.fileprovider")
             resValue("string", "linphone_openid_callback_scheme", packageName)
 
-            if (crashlyticsAvailable) {
-                val path = File("$sdkPath/libs-debug/").toString()
-                configure<CrashlyticsExtension> {
-                    nativeSymbolUploadEnabled = true
-                    unstrippedNativeLibsDir = path
-                }
-            }
-            buildConfigField("Boolean", "CRASHLYTICS_ENABLED", crashlyticsAvailable.toString())
+            // Kids.Talk: Crashlytics removed (KID-269) — data minimisation
+            buildConfigField("Boolean", "CRASHLYTICS_ENABLED", "false")
         }
     }
 
@@ -254,11 +233,7 @@ dependencies {
 
     implementation(platform(libs.google.firebase.bom))
     implementation(libs.google.firebase.messaging)
-    if (crashlyticsAvailable) {
-        implementation(libs.google.firebase.crashlytics)
-    } else {
-        compileOnly(libs.google.firebase.crashlytics)
-    }
+    // Kids.Talk: Crashlytics dependency removed (KID-269)
 
     // https://github.com/coil-kt/coil/blob/main/LICENSE.txt Apache v2.0
     implementation(libs.coil)
@@ -326,20 +301,3 @@ configure<org.jlleitschuh.gradle.ktlint.KtlintExtension> {
     )
 }
 project.tasks.preBuild.dependsOn("ktlintFormat")
-
-if (crashlyticsAvailable) {
-    afterEvaluate {
-        tasks.getByName("assembleDebug").finalizedBy(
-            tasks.getByName("uploadCrashlyticsSymbolFileDebug"),
-        )
-        tasks.getByName("packageDebug").finalizedBy(
-            tasks.getByName("uploadCrashlyticsSymbolFileDebug"),
-        )
-        tasks.getByName("assembleRelease").finalizedBy(
-            tasks.getByName("uploadCrashlyticsSymbolFileRelease"),
-        )
-        tasks.getByName("packageRelease").finalizedBy(
-            tasks.getByName("uploadCrashlyticsSymbolFileRelease"),
-        )
-    }
-}

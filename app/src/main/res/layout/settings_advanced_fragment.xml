@@ -73,35 +73,6 @@
                     app:layout_constraintStart_toStartOf="parent"
                     app:layout_constraintEnd_toEndOf="parent">
 
-                    <androidx.appcompat.widget.AppCompatTextView
-                        style="@style/settings_title_style"
-                        android:id="@+id/crashlytics_title"
-                        android:layout_width="0dp"
-                        android:layout_height="wrap_content"
-                        android:layout_marginStart="16dp"
-                        android:layout_marginEnd="10dp"
-                        android:text="@string/settings_advanced_print_logs_crashlytics_title"
-                        android:maxLines="3"
-                        android:ellipsize="end"
-                        android:labelFor="@id/crashlytics_switch"
-                        android:visibility="@{viewModel.isCrashlyticsAvailable ? View.VISIBLE : View.GONE}"
-                        app:layout_constraintTop_toTopOf="@id/crashlytics_switch"
-                        app:layout_constraintBottom_toBottomOf="@id/crashlytics_switch"
-                        app:layout_constraintStart_toStartOf="parent"
-                        app:layout_constraintEnd_toStartOf="@id/crashlytics_switch"/>
-
-                    <com.google.android.material.materialswitch.MaterialSwitch
-                        style="@style/material_switch_style"
-                        android:id="@+id/crashlytics_switch"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:layout_marginTop="20dp"
-                        android:layout_marginEnd="16dp"
-                        android:checked="@{viewModel.sendLogsToCrashlytics}"
-                        android:onClick="@{() -> viewModel.toggleSendLogsToCrashlytics()}"
-                        android:visibility="@{viewModel.isCrashlyticsAvailable ? View.VISIBLE : View.GONE}"
-                        app:layout_constraintEnd_toEndOf="parent"
-                        app:layout_constraintTop_toTopOf="parent"/>
 
                     <androidx.appcompat.widget.AppCompatTextView
                         style="@style/settings_title_style"
@@ -129,7 +100,7 @@
                         android:checked="@{viewModel.startAtBoot}"
                         android:onClick="@{() -> viewModel.toggleStartAtBoot()}"
                         app:layout_constraintEnd_toEndOf="parent"
-                        app:layout_constraintTop_toBottomOf="@id/crashlytics_switch"/>
+                        app:layout_constraintTop_toTopOf="parent"/>
 
                     <androidx.appcompat.widget.AppCompatTextView
                         style="@style/settings_title_style"

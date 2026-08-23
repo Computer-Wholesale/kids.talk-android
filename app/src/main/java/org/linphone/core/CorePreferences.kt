@@ -54,12 +54,6 @@ class CorePreferences
             config.setBool("app", "debug", value)
         }
 
-    @get:AnyThread @set:WorkerThread
-    var sendLogsToCrashlytics: Boolean
-        get() = config.getBool("app", "send_logs_to_crashlytics", BuildConfig.CRASHLYTICS_ENABLED)
-        set(value) {
-            config.setBool("app", "send_logs_to_crashlytics", value)
-        }
 
     @get:AnyThread @set:WorkerThread
     var firstLaunch: Boolean

@@ -338,7 +338,6 @@
     <string name="settings_calls_vibrate_while_ringing_title">Vibrovať počas prichádzajúceho hovoru</string>
     <string name="settings_conversations_auto_export_media_to_native_gallery_title">Sprístupniť zverejnenie stiahnutých médií</string>
     <string name="settings_tunnel_main_host_label">Hostiteľ</string>
-    <string name="settings_advanced_print_logs_crashlytics_title">Pomôžte vývojárom pri riešení problémov odosielaním záznamov do služby Crashlytics po páde aplikácie</string>
     <string name="settings_advanced_ring_during_early_media_title">Vyzváňať počas prichádzajúceho hovoru (early media)</string>
     <string name="settings_advanced_input_audio_device_title">Predvolené vstupné zvukové zariadenie</string>
     <string name="settings_advanced_output_audio_device_title">Predvolené výstupné zvukové zariadenie</string>
