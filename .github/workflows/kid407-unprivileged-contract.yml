@@ -45,6 +45,7 @@ jobs:
           set -euo pipefail
           bash scripts/test_kid407_firebase_contract.sh
           bash scripts/test_kid407_protected_workflow.sh
+          bash scripts/test_kid407_unprivileged_workflow.sh
 
       - name: Run no-FCM build gates
         shell: bash
