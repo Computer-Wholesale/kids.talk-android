@@ -1,0 +1,90 @@
+name: KID-407 Protected Firebase Client Binding
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  validate-protected-uat-ref:
+    name: Validate protected UAT release ref
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Require the protected UAT release branch
+        shell: bash
+        run: |
+          set -euo pipefail
+          if [ "${GITHUB_REF}" != "refs/heads/release/kid407-uat" ]; then
+            echo "KID-407 protected UAT execution is permitted only from release/kid407-uat." >&2
+            exit 1
+          fi
+
+  protected-uat-client-binding:
+    name: Protected UAT Firebase client binding
+    needs: validate-protected-uat-ref
+    if: github.ref == 'refs/heads/release/kid407-uat'
+    runs-on: ubuntu-latest
+    timeout-minutes: 75
+    environment: protected-uat
+    env:
+      KIDSTALK_FIREBASE_ANDROID_CLIENT_CONFIG: ${{ secrets.KIDSTALK_FIREBASE_ANDROID_CLIENT_CONFIG }}
+      KIDSTALK_FIREBASE_ANDROID_KEY_RESTRICTION_CONFIRMATION: ${{ secrets.KIDSTALK_FIREBASE_ANDROID_KEY_RESTRICTION_CONFIRMATION }}
+    steps:
+      - name: Check out protected UAT source
+        uses: actions/checkout@v4
+      - name: Set up JDK 21
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "21"
+          cache: gradle
+      - name: Set up Android SDK
+        uses: android-actions/setup-android@v3
+      - name: Materialise protected Firebase client configuration
+        shell: bash
+        run: |
+          set -euo pipefail
+          umask 077
+          cleanup() {
+            rm -f app/google-services.json
+          }
+          trap cleanup EXIT
+          if [ -z "${KIDSTALK_FIREBASE_ANDROID_CLIENT_CONFIG:-}" ]; then
+            echo "KID-407 protected Firebase client configuration is unavailable." >&2
+            exit 1
+          fi
+          if [ "${KIDSTALK_FIREBASE_ANDROID_KEY_RESTRICTION_CONFIRMATION:-}" != "verified" ]; then
+            echo "KID-407 requires release-owner confirmation of the restricted Android API key before protected UAT acceptance." >&2
+            exit 1
+          fi
+          printf 'sdk.dir=%s\n' "$ANDROID_HOME" > local.properties
+          printf '%s' "$KIDSTALK_FIREBASE_ANDROID_CLIENT_CONFIG" > app/google-services.json
+          chmod 600 app/google-services.json
+          python3 scripts/kid407_verify_firebase_contract.py --repository-root . --mode supplied --config app/google-services.json | tee kid407-contract-evidence.txt
+          ./gradlew :app:processDebugGoogleServices :app:processReleaseGoogleServices :app:testDebugUnitTest :app:compileReleaseKotlin :app:lint --no-daemon --max-workers=1 -Dorg.gradle.jvmargs='-Xmx2048m' --console=plain
+          mkdir -p kid407-artifacts
+          cp kid407-contract-evidence.txt kid407-artifacts/contract-evidence.txt
+          generated_resources="$(find app/build/generated -type f -path '*google-services*' -print 2>/dev/null || true)"
+          if [ -z "$generated_resources" ]; then
+            echo "Generated Google Services resources were not found." >&2
+            exit 1
+          fi
+          printf '%s\n' "$generated_resources" | sed 's#^.*/app/#app/#' > kid407-artifacts/generated-google-services-resource-paths.txt
+          printf 'GENERATED_GOOGLE_SERVICES_RESOURCES_PRESENT=true\n' | tee -a kid407-artifacts/contract-evidence.txt
+          printf 'REDACTED_UAT_BINDING_STATUS=PASS\n' | tee -a kid407-artifacts/contract-evidence.txt
+      # Do not upload app/google-services.json, generated Google Services resource contents, or raw Gradle diagnostics.
+      - name: Upload redacted KID-407 UAT evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: kid407-protected-firebase-binding-evidence
+          path: |
+            kid407-artifacts/
+          if-no-files-found: warn
+          retention-days: 14
+      - name: Remove protected Firebase client configuration
+        if: always()
+        shell: bash
+        run: rm -f app/google-services.json

@@ -36,24 +36,6 @@ jobs:
         run: |
           set -euo pipefail
           printf 'sdk.dir=%s\n' "$ANDROID_HOME" > local.properties
-          cat > app/google-services.json <<'EOF'
-          {
-            "project_info": {
-              "project_number": "000000000000",
-              "project_id": "kidstalk-ci-placeholder",
-              "storage_bucket": "kidstalk-ci-placeholder.appspot.com"
-            },
-            "client": [{
-              "client_info": {
-                "mobilesdk_app_id": "1:000000000000:android:0000000000000000",
-                "android_client_info": { "package_name": "com.kidstalk.phone" }
-              },
-              "api_key": [{ "current_key": "ci-placeholder" }],
-              "services": { "appinvite_service": { "other_platform_oauth_client": [] } }
-            }],
-            "configuration_version": "1"
-          }
-          EOF
           chmod +x gradlew
 
       - name: Run architect-required handoff gates
