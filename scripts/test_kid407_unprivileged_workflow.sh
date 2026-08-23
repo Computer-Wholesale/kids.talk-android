@@ -19,6 +19,7 @@ require_literal() {
 
 require_literal 'pull_request:'
 require_literal 'push:'
+require_literal '      - main'
 require_literal 'bash scripts/test_kid407_firebase_contract.sh'
 require_literal 'bash scripts/test_kid407_protected_workflow.sh'
 require_literal ':app:testDebugUnitTest'

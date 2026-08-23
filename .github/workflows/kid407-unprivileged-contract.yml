@@ -3,11 +3,11 @@ name: KID-407 Unprivileged Contract
 on:
   pull_request:
     branches:
-      - integration/kid394-remediation-hosted
+      - main
   push:
     branches:
-      - feature/KID-407-protected-firebase-client-binding
-      - integration/kid394-remediation-hosted
+      - feature/KID-407-protected-firebase-client-binding-main
+      - main
       - release/kid407-uat
 
 permissions:
