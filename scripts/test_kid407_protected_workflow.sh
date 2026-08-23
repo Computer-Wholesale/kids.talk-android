@@ -17,6 +17,9 @@ if [ ! -f "${workflow_path}" ]; then
   exit 1
 fi
 
+require_literal 'workflow_dispatch:'
+require_literal "github.ref == 'refs/heads/release/kid407-uat'"
+require_literal 'KID-407 protected UAT execution is permitted only from release/kid407-uat.'
 require_literal 'environment: protected-uat'
 require_literal 'KIDSTALK_FIREBASE_ANDROID_CLIENT_CONFIG'
 require_literal 'KIDSTALK_FIREBASE_ANDROID_KEY_RESTRICTION_CONFIRMATION'
@@ -30,5 +33,10 @@ require_literal 'GENERATED_GOOGLE_SERVICES_RESOURCES_PRESENT=true'
 require_literal 'REDACTED_UAT_BINDING_STATUS=PASS'
 require_literal 'if: always()'
 require_literal 'Do not upload app/google-services.json'
+
+if grep -Eq '^[[:space:]]+push:' "${workflow_path}"; then
+  printf 'Protected UAT workflow must not have an automatic push trigger.\n' >&2
+  exit 1
+fi
 
 printf 'KID407_PROTECTED_WORKFLOW_TESTS=PASS\n'
