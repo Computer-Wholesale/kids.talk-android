@@ -1,0 +1,145 @@
+name: KID-394 Emulator Accessibility
+
+on:
+  push:
+    branches:
+      - defect/KID-394-acceptance-remediation
+      - defect/KID-394-hostile-scale-visual-remediation
+      - integration/kid394-qa-remediation
+      - integration/kid394-remediation-hosted
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  connected-debug-tests:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+
+      - uses: android-actions/setup-android@v3
+
+      - name: Enable KVM for API 35 emulator
+        run: |
+          echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' | sudo tee /etc/udev/rules.d/99-kvm4all.rules
+          sudo udevadm control --reload-rules
+          sudo udevadm trigger --name-match=kvm
+
+      - name: Prepare non-secret Firebase configuration
+        run: |
+          cat > app/google-services.json <<'JSON'
+          {"project_info":{"project_number":"0","project_id":"kidstalk-ci","storage_bucket":"kidstalk-ci.appspot.com"},"client":[{"client_info":{"mobilesdk_app_id":"1:0:android:0","android_client_info":{"package_name":"com.kidstalk.phone"}},"oauth_client":[],"api_key":[{"current_key":"CI_PLACEHOLDER"}],"services":{"appinvite_service":{"other_platform_oauth_client":[]}}}],"configuration_version":"1"}
+          JSON
+
+      - name: Record API 35 preflight diagnostics
+        run: |
+          set -euo pipefail
+          mkdir -p artifacts/kid394-emulator/preflight
+          printf 'ANDROID_HOME=%s\nANDROID_SDK_ROOT=%s\n' "$ANDROID_HOME" "$ANDROID_SDK_ROOT" > artifacts/kid394-emulator/preflight/sdk-environment.txt
+          find "$ANDROID_HOME" -maxdepth 2 -type d | sort > artifacts/kid394-emulator/preflight/sdk-layout.txt
+          ls -l /dev/kvm > artifacts/kid394-emulator/preflight/kvm.txt 2>&1 || true
+          test -r /dev/kvm
+          test -w /dev/kvm
+          env | sort > artifacts/kid394-emulator/preflight/runner-environment.txt
+
+      - name: Generate release manifest evidence
+        run: |
+          set -euo pipefail
+          ./gradlew :app:processReleaseMainManifest --no-daemon --max-workers=1 -Dorg.gradle.jvmargs='-Xmx2048m' --stacktrace --console=plain
+          mkdir -p artifacts/kid394-emulator/release-manifest
+          find app/build/intermediates -path '*release*' -name AndroidManifest.xml -exec cp --parents {} artifacts/kid394-emulator/release-manifest/ \;
+
+      - name: Run API 35 instrumentation attempt
+        id: primary-attempt
+        continue-on-error: true
+        uses: reactivecircus/android-emulator-runner@v2
+        with:
+          api-level: 35
+          target: google_apis
+          arch: x86_64
+          profile: Nexus 6
+          avd-name: kid394-primary
+          force-avd-creation: true
+          emulator-options: -no-window -no-audio -no-boot-anim -gpu swiftshader_indirect -no-snapshot -no-snapshot-save
+          emulator-boot-timeout: 900
+          disable-animations: true
+          script: bash .github/scripts/kid394-emulator-attempt.sh primary
+
+      - name: Determine whether exactly one fresh-AVD retry is permitted
+        id: retry-decision
+        if: always()
+        run: |
+          set -euo pipefail
+          exit_code="$(cat artifacts/kid394-emulator/primary.exit-code 2>/dev/null || true)"
+          if [ -z "$exit_code" ] && [ "${{ steps.primary-attempt.outcome }}" = "failure" ]; then
+            exit_code=75
+          fi
+          exit_code="${exit_code:-1}"
+          printf 'primary_exit_code=%s\n' "$exit_code" | tee artifacts/kid394-emulator/retry-decision.txt
+          if [ "$exit_code" = "75" ]; then
+            echo 'retry=true' >> "$GITHUB_OUTPUT"
+          else
+            echo 'retry=false' >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Retry once on a fresh API 35 AVD after infrastructure failure
+        id: retry-attempt
+        if: steps.retry-decision.outputs.retry == 'true'
+        continue-on-error: true
+        uses: reactivecircus/android-emulator-runner@v2
+        with:
+          api-level: 35
+          target: google_apis
+          arch: x86_64
+          profile: Nexus 6
+          avd-name: kid394-retry
+          force-avd-creation: true
+          emulator-options: -no-window -no-audio -no-boot-anim -gpu swiftshader_indirect -no-snapshot -no-snapshot-save
+          emulator-boot-timeout: 900
+          disable-animations: true
+          script: bash .github/scripts/kid394-emulator-attempt.sh retry
+
+      - name: Preserve the real test exit status
+        if: always()
+        run: |
+          set -euo pipefail
+          primary_exit_code="$(cat artifacts/kid394-emulator/primary.exit-code 2>/dev/null || true)"
+          if [ -z "$primary_exit_code" ] && [ "${{ steps.primary-attempt.outcome }}" = "failure" ]; then
+            primary_exit_code=75
+          fi
+          primary_exit_code="${primary_exit_code:-1}"
+          retry_exit_code="$(cat artifacts/kid394-emulator/retry.exit-code 2>/dev/null || true)"
+          if [ -z "$retry_exit_code" ] && [ "${{ steps.retry-attempt.outcome }}" = "failure" ]; then
+            retry_exit_code=75
+          fi
+          {
+            printf 'primary_exit_code=%s\n' "$primary_exit_code"
+            printf 'retry_exit_code=%s\n' "${retry_exit_code:-not-run}"
+          } | tee artifacts/kid394-emulator/execution-summary.txt
+          if [ "$primary_exit_code" = "0" ]; then
+            exit 0
+          fi
+          if [ "$primary_exit_code" = "75" ] && [ -n "$retry_exit_code" ]; then
+            exit "$retry_exit_code"
+          fi
+          exit "$primary_exit_code"
+
+      - name: Upload API 35 emulator evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: kid394-emulator-evidence
+          path: |
+            artifacts/kid394-emulator/**
+            app/build/outputs/androidTest-results/**/*.xml
+            app/build/reports/androidTests/**
+            app/build/outputs/connected_android_test_additional_output/**
+            app/build/outputs/logs/**
+          if-no-files-found: warn

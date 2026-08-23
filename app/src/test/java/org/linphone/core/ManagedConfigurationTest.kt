@@ -123,6 +123,7 @@ class ManagedConfigurationTest {
     fun `empty restrictions trigger resetConfig and post the removed event`() {
         pushRestrictions()
         every { core.globalState } returns GlobalState.Off
+        every { corePreferencesMock.isMdmConfigured } returns true
 
         ManagedConfiguration.applyMdmConfigToCore(context, core)
 
@@ -255,8 +256,7 @@ class ManagedConfigurationTest {
 
     @Test
     fun `MDM configUri prevails even when it equals the pre-xml provisioning URI`() {
-        // Edge case: MDM URI matches what was in core.provisioningUri before xmlConfig loaded,
-        // but xmlConfig writes a different URI to [misc] config-uri. MDM must still win.
+        // Contract: inline XML may replace the URI, but MDM configUri must reapply after XML and win.
         val xml = "<config/>"
         val mdmUri = "https://mdm.example.com/foo.xml"
         val xmlInternalUri = "https://embedded-in-xml.example.com/foo.xml"
@@ -281,8 +281,7 @@ class ManagedConfigurationTest {
 
     @Test
     fun `MDM configUri is not pushed when xmlConfig already produced the same URI`() {
-        // Optimization: if loadFromXmlString happens to set [misc] config-uri to exactly
-        // the MDM value, the redundant setter call is skipped. Final state still matches MDM.
+        // Contract: if XML already produces the MDM configUri, no redundant setter call is made.
         val xml = "<config/>"
         val mdmUri = "https://mdm.example.com/foo.xml"
         pushRestrictions(

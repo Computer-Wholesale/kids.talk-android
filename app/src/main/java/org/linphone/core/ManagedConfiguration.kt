@@ -34,6 +34,8 @@ object ManagedConfiguration {
     const val KEY_CONFIG_URI = "configUri"
     const val KEY_XML_CONFIG = "xmlConfig"
     const val KEY_ROOT_CA = "rootCa"
+    const val KEY_CONTACT_NAME = "managedContactName"
+    const val KEY_CONTACT_EXTENSION = "managedContactExtension"
 
     @WorkerThread
     fun getRestrictions(context: Context): Bundle? {
@@ -64,19 +66,18 @@ object ManagedConfiguration {
         val rootCa = restrictions.getString(KEY_ROOT_CA).orEmpty()
         val xmlConfig = restrictions.getString(KEY_XML_CONFIG).orEmpty()
 
-        val currentProvisioningUri = core.provisioningUri
-
         if (xmlConfig.isNotBlank()) {
             Log.w("$TAG Updating  configuration from managed configuration xmlConfig = [$xmlConfig]")
             core.config.loadFromXmlString(xmlConfig)
         }
+        val effectiveProvisioningUri = core.provisioningUri
 
         if (rootCa.isNotBlank() && rootCa != core.rootCa) {
             Log.w("$TAG Updating root CA from managed configuration $rootCa")
             core.rootCa = rootCa
         }
 
-        if (configUri.isNotBlank() && configUri != currentProvisioningUri) { // takes priority over potential config-uri set in xmlConfig
+        if (configUri.isNotBlank() && configUri != effectiveProvisioningUri) { // takes priority over potential config-uri set in xmlConfig
             Log.w("$TAG Updating provisioning URI from managed configuration $configUri")
             core.provisioningUri = configUri
         }

@@ -127,6 +127,29 @@ class CoreContext
         MutableLiveData<Event<Boolean>>()
     }
 
+    val mdmConfigAppliedEvent: MutableLiveData<Event<Boolean>> by lazy {
+        MutableLiveData<Event<Boolean>>()
+    }
+
+    val mdmConfigRemovedEvent: MutableLiveData<Event<Boolean>> by lazy {
+        MutableLiveData<Event<Boolean>>()
+    }
+
+    /**
+     * Clears any pending bearer authentication and cancels in-flight bearer auth.
+     * Called by SSO flows when authentication is aborted or superseded.
+     * Semantics: clear bearerAuthInfoPendingPasswordUpdate from Core and dismiss
+     * any authentication dialog via clearAuthenticationRequestDialogEvent.
+     */
+    fun abortBearerAuthIfAny() {
+        bearerAuthInfoPendingPasswordUpdate?.let { authInfo ->
+            Log.i("$TAG Aborting pending bearer authentication")
+            core.removeAuthInfo(authInfo)
+        }
+        bearerAuthInfoPendingPasswordUpdate = null
+        clearAuthenticationRequestDialogEvent.postValue(Event(true))
+    }
+
     private var filesToExportToNativeMediaGallery = arrayListOf<String>()
     val filesToExportToNativeMediaGalleryEvent: MutableLiveData<Event<List<String>>> by lazy {
         MutableLiveData<Event<List<String>>>()
@@ -164,7 +187,7 @@ class CoreContext
 
                     if (atLeastOneNewDeviceIsBluetooth && core.callsNb > 0 && corePreferences.routeAudioToBluetoothWhenPossible) {
                         Log.i("$TAG It seems a bluetooth device is now available, trying to route audio to it")
-                        AudioUtils.routeAudioToEitherBluetoothOrHearingAid()
+                        AudioUtils.routeAudioBluetoothOrHearingAid()
                     }
                 }, 500)
             }
@@ -364,7 +387,7 @@ class CoreContext
                 Call.State.OutgoingRinging, Call.State.OutgoingEarlyMedia -> {
                     if (corePreferences.routeAudioToBluetoothWhenPossible) {
                         Log.i("$TAG Trying to route audio to either bluetooth or hearing aid if available")
-                        AudioUtils.routeAudioToEitherBluetoothOrHearingAid(call)
+                        AudioUtils.routeAudioBluetoothOrHearingAid(call)
                     }
                 }
                 Call.State.Connected -> {
@@ -373,7 +396,7 @@ class CoreContext
                     }
                     if (corePreferences.routeAudioToBluetoothWhenPossible) {
                         Log.i("$TAG Call is connected, trying to route audio to either bluetooth or hearing aid if available")
-                        AudioUtils.routeAudioToEitherBluetoothOrHearingAid(call)
+                        AudioUtils.routeAudioBluetoothOrHearingAid(call)
                     }
                 }
                 Call.State.StreamsRunning -> {
@@ -621,8 +644,8 @@ class CoreContext
         }
         Log.i("=========================================")
         Log.i("==== Linphone-android information dump ====")
-        val gitVersion = AppUtils.getString(org.linphone.R.string.linphone_app_version)
-        val gitBranch = AppUtils.getString(org.linphone.R.string.linphone_app_branch)
+        val gitVersion = AppUtils.getString(org.linphone.R.string.kidstalk_app_version)
+        val gitBranch = AppUtils.getString(org.linphone.R.string.kidstalk_app_branch)
         Log.i("VERSION=${BuildConfig.VERSION_NAME} / ${BuildConfig.VERSION_CODE} ($gitVersion from $gitBranch branch)")
         Log.i("PACKAGE=${BuildConfig.APPLICATION_ID}")
         Log.i("BUILD TYPE=${BuildConfig.BUILD_TYPE}")

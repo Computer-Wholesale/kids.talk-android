@@ -26,9 +26,7 @@ import android.app.Dialog
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.graphics.Color
-import android.net.Uri
 import android.os.Bundle
-import android.os.Parcelable
 import android.view.Gravity
 import android.view.ViewGroup
 import android.view.ViewTreeObserver
@@ -39,7 +37,6 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.annotation.UiThread
 import androidx.car.app.connection.CarConnection
 import androidx.core.app.ActivityCompat
-import androidx.core.os.bundleOf
 import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
@@ -52,10 +49,7 @@ import androidx.navigation.NavDestination
 import androidx.navigation.NavOptions
 import androidx.navigation.findNavController
 import kotlin.math.max
-import kotlinx.coroutines.Deferred
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.async
-import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import org.linphone.LinphoneApplication.Companion.coreContext
@@ -66,14 +60,14 @@ import org.linphone.core.tools.Log
 import org.linphone.databinding.MainActivityBinding
 import org.linphone.ui.GenericActivity
 import org.linphone.ui.setup.KidsTalkSetupActivity
-import org.linphone.ui.main.chat.fragment.ConversationsListFragmentDirections
 import org.linphone.utils.PasswordDialogModel
-import org.linphone.ui.main.sso.fragment.SingleSignOnFragmentDirections
+import org.linphone.utils.ShortcutUtils
+import org.linphone.ui.sso.SingleSignOnActivity
+import org.linphone.ui.main.kidstalk.KidsTalkExternalIntentPolicy
 import org.linphone.ui.main.viewmodel.MainViewModel
 import org.linphone.ui.main.viewmodel.SharedMainViewModel
 import org.linphone.utils.AppUtils
 import org.linphone.utils.DialogUtils
-import org.linphone.utils.Event
 import org.linphone.utils.FileUtils
 import org.linphone.utils.LinphoneUtils
 import androidx.core.content.edit
@@ -182,6 +176,7 @@ class MainActivity : GenericActivity() {
         while (!coreContext.isReady()) {
             Thread.sleep(50)
         }
+        ShortcutUtils.disableConversationShortcuts(this)
 
         viewModel = run {
             ViewModelProvider(this)[MainViewModel::class.java]
@@ -298,11 +293,11 @@ class MainActivity : GenericActivity() {
                 Log.i(
                     "$TAG Navigating to Single Sign On Fragment with server URL [$serverUrl] and username [$username]"
                 )
-                val action = SingleSignOnFragmentDirections.actionGlobalSingleSignOnFragment(
-                    serverUrl,
-                    username
-                )
-                findNavController().navigate(action)
+                val ssoIntent = Intent(this, SingleSignOnActivity::class.java).apply {
+                    putExtra(SingleSignOnActivity.INTENT_EXTRA_SERVER_URL, serverUrl)
+                    putExtra(SingleSignOnActivity.INTENT_EXTRA_USERNAME, username)
+                }
+                startActivity(ssoIntent)
             }
         }
 
@@ -482,318 +477,36 @@ class MainActivity : GenericActivity() {
 
     private fun goToLatestVisitedFragment() {
         try {
-            // Prevent navigating to default fragment upon rotation (we only want to do it on first start)
-            if (intent.action == Intent.ACTION_MAIN && intent.type == null && intent.data == null) {
-                if (viewModel.mainIntentHandled) {
-                    Log.d(
-                        "$TAG Main intent without type nor data was already handled, do nothing"
-                    )
-                    navigatedToDefaultFragment = true
-                    return
-                } else {
-                    viewModel.mainIntentHandled = true
-                }
-            }
-
-            val defaultFragmentId = getPreferences(MODE_PRIVATE).getInt(
-                DEFAULT_FRAGMENT_KEY,
-                CONTACTS_FRAGMENT_ID
-            )
-            Log.i(
-                "$TAG Trying to navigate to set default destination [$defaultFragmentId]"
-            )
-            try {
-                val navOptionsBuilder = NavOptions.Builder()
-                navOptionsBuilder.setPopUpTo(R.id.contactsListFragment, true)
-                navOptionsBuilder.setLaunchSingleTop(true)
-                val navOptions = navOptionsBuilder.build()
-                val args = bundleOf()
-                when (defaultFragmentId) {
-                    CONTACTS_FRAGMENT_ID -> {
-                        findNavController().addOnDestinationChangedListener(destinationListener)
-                        findNavController().navigate(
-                            R.id.contactsListFragment,
-                            args,
-                            navOptions
-                        )
-                    }
-                    CHAT_FRAGMENT_ID -> {
-                        findNavController().addOnDestinationChangedListener(destinationListener)
-                        findNavController().navigate(
-                            R.id.conversationsListFragment,
-                            args,
-                            navOptions
-                        )
-                    }
-                    MEETINGS_FRAGMENT_ID -> {
-                        findNavController().addOnDestinationChangedListener(destinationListener)
-                        findNavController().navigate(
-                            R.id.meetingsListFragment,
-                            args,
-                            navOptions
-                        )
-                    }
-                    else -> {
-                        Log.i("$TAG Default fragment is the same as the latest visited one")
-                        navigatedToDefaultFragment = true
-                    }
-                }
-            } catch (ise: IllegalStateException) {
-                Log.e("$TAG Can't navigate to Conversations fragment: $ise")
-            }
-        } catch (ise: IllegalStateException) {
-            Log.i("$TAG Failed to handle intent: $ise")
+            viewModel.mainIntentHandled = true
+            navigatedToDefaultFragment = true
+            val navOptions = NavOptions.Builder()
+                .setLaunchSingleTop(true)
+                .build()
+            findNavController().navigate(R.id.kidsTalkCallFragment, null, navOptions)
+        } catch (exception: IllegalStateException) {
+            Log.i("$TAG Failed to open Kids.Talk home: $exception")
         }
     }
 
     private fun handleIntent(intent: Intent) {
-        val extras = intent.extras
-        val hasExtra = extras != null && !extras.isEmpty
-        Log.i(
-            "$TAG Handling intent action [${intent.action}], type [${intent.type}], data [${intent.data}] and has ${if (hasExtra) "extras" else "no extra"}"
-        )
-
-        val action = intent.action ?: return
-        when (action) {
-            Intent.ACTION_SEND -> {
-                handleSendIntent(intent, false)
-            }
-            Intent.ACTION_SEND_MULTIPLE -> {
-                handleSendIntent(intent, true)
-            }
-            Intent.ACTION_VIEW -> {
-                val uri = intent.data?.toString() ?: ""
-                if (uri.startsWith("linphone-config:")) {
-                    handleConfigIntent(uri)
-                } else {
-                    handleCallIntent(intent)
-                }
-            }
-            Intent.ACTION_DIAL, Intent.ACTION_CALL -> {
-                handleCallIntent(intent)
-            }
-            Intent.ACTION_VIEW_LOCUS -> {
-                val locus = Compatibility.extractLocusIdFromIntent(intent)
-                if (locus != null) {
-                    Log.i("$TAG Found chat room locus intent extra: $locus")
-                    handleLocusOrShortcut(locus)
-                }
-            }
-            else -> {
-                handleMainIntent(intent)
-            }
+        if (KidsTalkExternalIntentPolicy.containsExternalInput(intent.action, intent.data?.scheme)) {
+            Log.i("$TAG Ignoring unsupported external intent in the single-contact experience")
         }
+        handleMainIntent()
     }
 
-    private fun handleLocusOrShortcut(id: String) {
-        Log.i("$TAG Found locus ID [$id]")
-        if (id.isNotEmpty()) {
-            Log.i("$TAG Navigating to conversation with ID [$id], computed from shortcut ID")
-            sharedViewModel.showConversationEvent.value = Event(id)
-        }
-    }
-
-    private fun handleMainIntent(intent: Intent) {
+    private fun handleMainIntent() {
         coreContext.postOnCoreThread { core ->
             if (core.accountList.isEmpty()) {
-                // Kids.Talk: show setup screen when no account is configured
                 Log.i("$TAG No account configured, showing Kids.Talk setup screen")
                 corePreferences.firstLaunch = false
                 coreContext.postOnMainThread {
                     try {
                         startActivity(Intent(this, KidsTalkSetupActivity::class.java))
-                    } catch (ise: IllegalStateException) {
-                        Log.e("$TAG Can't start activity: $ise")
+                    } catch (exception: IllegalStateException) {
+                        Log.e("$TAG Cannot start Kids.Talk setup: $exception")
                     }
                 }
-            } else {
-                if (intent.hasExtra(ARGUMENTS_CHAT)) {
-                    Log.i("$TAG Intent has [Chat] extra")
-                    coreContext.postOnMainThread {
-                        try {
-                            Log.i("$TAG Trying to go to Conversations fragment")
-                            val args = intent.extras
-                            val conversationId = args?.getString(ARGUMENTS_CONVERSATION_ID, "")
-                            if (conversationId.isNullOrEmpty()) {
-                                Log.w("$TAG Found [Chat] extra but no conversation ID!")
-                            } else {
-                                Log.i("$TAG Found [Chat] extra with conversation ID [$conversationId]")
-                                sharedViewModel.showConversationEvent.value = Event(conversationId)
-                            }
-                            args?.clear()
-
-                            if (findNavController().currentDestination?.id == R.id.conversationsListFragment) {
-                                Log.w(
-                                    "$TAG Current destination is already conversations list, skipping navigation"
-                                )
-                            } else {
-                                val navOptionsBuilder = NavOptions.Builder()
-                                navOptionsBuilder.setPopUpTo(
-                                    findNavController().currentDestination?.id ?: R.id.historyListFragment,
-                                    true
-                                )
-                                navOptionsBuilder.setLaunchSingleTop(true)
-                                val navOptions = navOptionsBuilder.build()
-                                findNavController().navigate(
-                                    R.id.conversationsListFragment,
-                                    args,
-                                    navOptions
-                                )
-                            }
-                        } catch (ise: IllegalStateException) {
-                            Log.e("$TAG Can't navigate to Conversations fragment: $ise")
-                        }
-                    }
-                }
-            }
-        }
-    }
-
-    private fun handleSendIntent(intent: Intent, multiple: Boolean) {
-        val parcelablesUri = arrayListOf<Uri>()
-
-        if (intent.type == "text/plain") {
-            Log.i("$TAG Intent type is [${intent.type}], expecting text in Intent.EXTRA_TEXT")
-            intent.getStringExtra(Intent.EXTRA_TEXT)?.let { extraText ->
-                Log.i("$TAG Found extra text in intent, long of [${extraText.length}]")
-                sharedViewModel.textToShareFromIntent.value = extraText
-            }
-        }
-
-        if (multiple) {
-            val parcelables =
-                intent.getParcelableArrayListExtra<Parcelable>(Intent.EXTRA_STREAM)
-            for (parcelable in parcelables.orEmpty()) {
-                val uri = parcelable as? Uri
-                if (uri != null) {
-                    Log.i("$TAG Found URI [$uri] in parcelable extra list")
-                    parcelablesUri.add(uri)
-                }
-            }
-        } else {
-            val uri = intent.getParcelableExtra<Parcelable>(Intent.EXTRA_STREAM) as? Uri
-            if (uri != null) {
-                Log.i("$TAG Found URI [$uri] in parcelable extra")
-                parcelablesUri.add(uri)
-            }
-        }
-
-        val list = arrayListOf<String>()
-        lifecycleScope.launch {
-            val deferred = arrayListOf<Deferred<String?>>()
-            for (uri in parcelablesUri) {
-                Log.i("$TAG Deferring copy from file [${uri.path}] to local storage")
-                deferred.add(async { FileUtils.getFilePath(this@MainActivity, uri, false) })
-            }
-
-            if (binding.drawerMenu.isOpen) {
-                Log.i("$TAG Drawer menu is opened, closing it")
-                closeDrawerMenu()
-            }
-            if (findNavController().currentDestination?.id == R.id.conversationsListFragment) {
-                if (sharedViewModel.displayedChatRoom != null) {
-                    Log.w(
-                        "$TAG Closing already opened conversation to prevent attaching file in it directly"
-                    )
-                    sharedViewModel.hideConversationEvent.value = Event(true)
-                } else {
-                    Log.i("$TAG No chat room currently displayed, nothing to close")
-                }
-            }
-
-            val paths = deferred.awaitAll()
-            for (path in paths) {
-                Log.i("$TAG Found file to share [$path] in intent")
-                if (path != null) list.add(path)
-            }
-
-            if (list.isNotEmpty()) {
-                sharedViewModel.filesToShareFromIntent.value = list
-            } else {
-                if (sharedViewModel.textToShareFromIntent.value.orEmpty().isNotEmpty()) {
-                    Log.i("$TAG Found plain text to share")
-                } else {
-                    Log.w("$TAG Failed to find at least one file or text to share!")
-                }
-            }
-
-            if (findNavController().currentDestination?.id == R.id.debugFragment) {
-                Log.i(
-                    "$TAG App is already started and in debug fragment, navigating to conversations list"
-                )
-                val conversationId = parseShortcutIfAny(intent)
-                if (conversationId != null) {
-                    Log.i(
-                        "$TAG Navigating from debug to conversation with ID [$conversationId], computed from shortcut ID"
-                    )
-                    sharedViewModel.showConversationEvent.value = Event(conversationId)
-                }
-
-                val action = ConversationsListFragmentDirections.actionGlobalConversationsListFragment()
-                val options = NavOptions.Builder()
-                options.apply {
-                    setPopUpTo(R.id.helpFragment, true)
-                    setLaunchSingleTop(true)
-                }
-                findNavController().navigate(action, options.build())
-            } else {
-                val conversationId = parseShortcutIfAny(intent)
-                if (conversationId != null) {
-                    Log.i(
-                        "$TAG Navigating to conversation with conversation ID [$conversationId] addresses, computed from shortcut ID"
-                    )
-                    sharedViewModel.showConversationEvent.value = Event(conversationId)
-                }
-
-                if (findNavController().currentDestination?.id == R.id.conversationsListFragment) {
-                    Log.w(
-                        "$TAG Current destination is already conversations list, skipping navigation"
-                    )
-                } else {
-                    val action = ConversationsListFragmentDirections.actionGlobalConversationsListFragment()
-                    findNavController().navigate(action)
-                }
-            }
-        }
-    }
-
-    private fun parseShortcutIfAny(intent: Intent): String? {
-        val shortcutId = intent.getStringExtra("android.intent.extra.shortcut.ID") // Intent.EXTRA_SHORTCUT_ID
-        if (shortcutId != null) {
-            Log.i("$TAG Found shortcut ID [$shortcutId]")
-            return shortcutId
-        } else {
-            Log.i("$TAG No shortcut ID was found")
-        }
-        return null
-    }
-
-    private fun handleCallIntent(intent: Intent) {
-        val uri = intent.data?.toString()
-        if (uri.isNullOrEmpty()) {
-            Log.e("$TAG Intent data is null or empty, can't process [${intent.action}] intent")
-            return
-        }
-
-        Log.i("$TAG Found URI [$uri] as data for intent [${intent.action}]")
-        val sipUriToCall = when {
-            uri.startsWith("tel:") -> uri.substring("tel:".length)
-            uri.startsWith("callto:") -> uri.substring("callto:".length)
-            uri.startsWith("sip-linphone:") -> uri.replace("sip-linphone:", "sip:")
-            uri.startsWith("linphone-sip:") -> uri.replace("linphone-sip:", "sip:")
-            uri.startsWith("sips-linphone:") -> uri.replace("sips-linphone:", "sips:")
-            uri.startsWith("linphone-sips:") -> uri.replace("linphone-sips:", "sips:")
-            else -> uri.replace("%40", "@") // Unescape @ character if needed
-        }
-
-        coreContext.postOnCoreThread {
-            val address = coreContext.core.interpretUrl(
-                sipUriToCall,
-                LinphoneUtils.applyInternationalPrefix()
-            )
-            Log.i("$TAG Interpreted SIP URI is [${address?.asStringUriOnly()}]")
-            if (address != null) {
-                coreContext.startAudioCall(address)
             }
         }
     }

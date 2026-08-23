@@ -2,9 +2,16 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools">
 
+    <!-- Remove camera capability contributions from the pinned Linphone SDK in the shipping manifest. -->
+    <uses-permission
+        android:name="android.permission.CAMERA"
+        tools:node="remove" />
+    <uses-permission
+        android:name="android.permission.FOREGROUND_SERVICE_CAMERA"
+        tools:node="remove" />
     <uses-feature
         android:name="android.hardware.camera"
-        android:required="false" />
+        tools:node="remove" />
 
     <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.RECORD_AUDIO" />
@@ -26,7 +33,7 @@
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE"/>
     <!-- Needed for Android 14
     https://developer.android.com/about/versions/14/behavior-changes-14#fgs-types -->
-    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_CAMERA" />
+    <!-- KID-282: FOREGROUND_SERVICE_CAMERA removed — Kids.Talk is voice-only, no camera FGS required -->
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE_MICROPHONE" />
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE_PHONE_CALL" />
     <!-- Required for foreground service started when a push is being received,
@@ -41,8 +48,6 @@
     <!-- Needed for auto start at boot if keep alive service is enabled -->
     <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
 
-    <uses-permission android:name="android.permission.READ_PHONE_STATE"/>
-    <uses-permission android:name="android.permission.READ_PHONE_NUMBERS"/>
 
     <application
         android:name=".LinphoneApplication"
@@ -79,9 +84,6 @@
             android:exported="true"
             android:launchMode="singleTask">
 
-            <meta-data
-                android:name="android.app.shortcuts"
-                android:resource="@xml/shortcuts" />
 
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
@@ -92,41 +94,7 @@
                 <action android:name="android.intent.action.VIEW_LOCUS" />
             </intent-filter>
 
-            <intent-filter>
-                <action android:name="android.intent.action.SEND" />
-                <category android:name="android.intent.category.DEFAULT" />
-                <data android:mimeType="text/*" />
-                <data android:mimeType="image/*" />
-                <data android:mimeType="audio/*" />
-                <data android:mimeType="video/*" />
-                <data android:mimeType="application/*" />
-            </intent-filter>
 
-            <intent-filter>
-                <action android:name="android.intent.action.SEND_MULTIPLE" />
-                <category android:name="android.intent.category.DEFAULT" />
-                <data android:mimeType="image/*" />
-                <data android:mimeType="audio/*" />
-                <data android:mimeType="video/*" />
-                <data android:mimeType="application/*" />
-            </intent-filter>
-
-            <intent-filter>
-                <action android:name="android.intent.action.DIAL" />
-                <action android:name="android.intent.action.VIEW" />
-                <action android:name="android.intent.action.CALL" />
-                <category android:name="android.intent.category.DEFAULT" />
-                <category android:name="android.intent.category.BROWSABLE" />
-                <data android:scheme="tel" />
-                <data android:scheme="sip" />
-                <data android:scheme="callto" />
-                <data android:scheme="sips" />
-                <data android:scheme="sip-linphone" />
-                <data android:scheme="sips-linphone" />
-                <data android:scheme="linphone-sip" />
-                <data android:scheme="linphone-sips" />
-                <data android:scheme="linphone-config" />
-            </intent-filter>
 
         </activity>
 
@@ -175,7 +143,7 @@
         <service
             android:name=".core.CoreInCallService"
             android:exported="false"
-            android:foregroundServiceType="phoneCall|camera|microphone"
+            android:foregroundServiceType="phoneCall|microphone"
             android:stopWithTask="false"
             android:label="@string/app_name" />
 
@@ -229,14 +197,6 @@
             </intent-filter>
         </service>
 
-        <service
-            android:name=".telecom.TelecomRedirectionService"
-            android:exported="true"
-            android:permission="android.permission.BIND_CALL_REDIRECTION_SERVICE">
-            <intent-filter>
-                <action android:name="android.telecom.CallRedirectionService"/>
-            </intent-filter>
-        </service>
 
         <!-- Receivers -->
 

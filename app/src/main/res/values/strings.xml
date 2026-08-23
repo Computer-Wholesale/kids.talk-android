@@ -1074,4 +1074,68 @@
     <string name="managed_xml_config_description" translatable="false">Raw XML provisioning content applied on startup.</string>
     <string name="managed_root_ca_title" translatable="false">Root CA certificate</string>
     <string name="managed_root_ca_description" translatable="false">PEM-encoded root certificate(s) used to validate TLS connections.</string>
+
+    <!-- KID-391: Kids.Talk Setup Screen strings
+         Privacy Invariant: all strings are guardian-facing, no child-identifying language,
+         no internal system labels or raw SIP/SDK error detail. -->
+
+    <!-- Step 1: Login card -->
+    <string name="setup_tagline">Connect your household endpoint</string>
+    <string name="setup_username_label">Extension</string>
+    <string name="setup_username_hint">6-digit extension</string>
+    <string name="setup_password_label">Password</string>
+    <string name="setup_password_hint">Account password</string>
+    <string name="setup_connect_button">CONNECT</string>
+    <string name="setup_help_text">Enter the extension and password provided by your household administrator.</string>
+
+    <!-- Step 1: Validation errors (Activity) -->
+    <string name="setup_username_length_error">Extension must be exactly 6 digits</string>
+    <string name="setup_username_digits_error">Extension must contain only digits</string>
+
+    <!-- Step 1: Registration errors (ViewModel — Privacy Invariant: approved copy only) -->
+    <string name="setup_error_invalid_credentials">The extension or password is incorrect. Please check and try again.</string>
+    <string name="setup_error_account_not_found">This extension was not found. Please contact your household administrator.</string>
+    <string name="setup_error_network">Unable to reach the server. Please check your internet connection.</string>
+    <string name="setup_error_generic">Something went wrong. Please try again later.</string>
+
+    <!-- Step 2: Microphone permission -->
+    <string name="setup_perm_mic_title">Microphone Access</string>
+    <string name="setup_perm_mic_body">Kids.Talk needs microphone access to make and receive calls.</string>
+    <string name="setup_perm_mic_instruction">Tap Allow when prompted.</string>
+    <string name="setup_perm_mic_allow_button">ALLOW MICROPHONE</string>
+
+    <!-- Step 3: Notifications permission -->
+    <string name="setup_perm_notif_title">Notifications</string>
+    <string name="setup_perm_notif_body">Notifications let you know when someone is calling.</string>
+    <string name="setup_perm_notif_instruction">Tap Allow when prompted.</string>
+    <string name="setup_perm_notif_allow_button">ALLOW NOTIFICATIONS</string>
+
+    <!-- Step 4: Full-screen intent permission -->
+    <string name="setup_permission_title">Incoming Call Display</string>
+    <string name="setup_permission_body">This allows the call screen to appear when the device is locked.</string>
+    <string name="setup_permission_instruction">Enable the permission in Settings.</string>
+    <string name="setup_permission_allow_button">OPEN SETTINGS</string>
+    <string name="setup_permission_skip_button">SKIP</string>
+
+    <!-- KID-391: Kids.Talk Call Fragment strings -->
+    <string name="kt_contact_saved">Contact saved</string>
+    <string name="kt_call_failed">Unable to place call</string>
+    <string name="kt_change_contact">CHANGE CONTACT</string>
+    <string name="kt_contact_name_label">Contact name</string>
+    <string name="kt_contact_name_hint">Contact name</string>
+    <string name="kt_contact_extension_label">Extension number</string>
+    <string name="kt_contact_number_hint">Extension number</string>
+    <string name="kt_save_contact">SAVE CONTACT</string>
+
+    <string name="kt_call_button">CALL</string>
+    <string name="kt_contact_change_auth_title">Confirm contact change</string>
+    <string name="kt_contact_change_auth_subtitle">Use this device\'s screen lock to change the household contact.</string>
+    <string name="kt_contact_change_unprotected_notice">This device has no screen lock. The household contact can be changed now.</string>
+    <string name="kt_contact_change_cancelled">Contact change was cancelled.</string>
+    <string name="kt_contact_save_failed">Unable to save contact.</string>
+    <string name="kt_call_not_ready">Your account is not ready to place a call.</string>
+    <string name="managed_contact_name_title" translatable="false">Managed household contact name</string>
+    <string name="managed_contact_name_description" translatable="false">Name of the centrally managed household contact.</string>
+    <string name="managed_contact_extension_title" translatable="false">Managed household contact extension</string>
+    <string name="managed_contact_extension_description" translatable="false">Six-digit extension of the centrally managed household contact.</string>
 </resources>

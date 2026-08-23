@@ -106,6 +106,7 @@ android {
         applicationId = packageName
         minSdk = 28
         targetSdk = 37
+        testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         versionCode = 114 // 1.14
         versionName = "1.14"
 
@@ -157,8 +158,8 @@ android {
             val appVersion = gitVersion
             val appBranch = gitBranch
             println("Debug flavor app version is [$appVersion], app branch is [$appBranch]")
-            resValue("string", "linphone_app_version", appVersion)
-            resValue("string", "linphone_app_branch", appBranch)
+            resValue("string", "kidstalk_app_version", appVersion)
+            resValue("string", "kidstalk_app_branch", appBranch)
             if (useDifferentPackageNameForDebugBuild) {
                 resValue("string", "file_provider", "$packageName.debug.fileprovider")
             } else {
@@ -188,8 +189,8 @@ android {
             val appVersion = gitVersion
             val appBranch = gitBranch
             println("Release flavor app version is [$appVersion], app branch is [$appBranch]")
-            resValue("string", "linphone_app_version", appVersion)
-            resValue("string", "linphone_app_branch", appBranch)
+            resValue("string", "kidstalk_app_version", appVersion)
+            resValue("string", "kidstalk_app_branch", appBranch)
             resValue("string", "file_provider", "$packageName.fileprovider")
             resValue("string", "linphone_openid_callback_scheme", packageName)
 
@@ -238,6 +239,7 @@ dependencies {
     implementation(libs.androidx.window)
     implementation(libs.androidx.gridlayout)
     implementation(libs.androidx.security.crypto.ktx)
+    implementation(libs.androidx.biometric)
     implementation(libs.androidx.navigation.fragment.ktx)
     implementation(libs.androidx.navigation.ui.ktx)
     implementation(libs.androidx.emoji2)
@@ -274,6 +276,12 @@ dependencies {
 
     testImplementation(libs.junit)
     testImplementation(libs.mockk)
+
+    androidTestImplementation("androidx.test:core-ktx:1.6.1")
+    androidTestImplementation("androidx.test:runner:1.6.2")
+    androidTestImplementation("androidx.test.ext:junit:1.2.1")
+    androidTestImplementation("androidx.test.espresso:espresso-core:3.6.1")
+    androidTestImplementation("androidx.test.espresso:espresso-accessibility:3.6.1")
 }
 
 configure<org.jlleitschuh.gradle.ktlint.KtlintExtension> {

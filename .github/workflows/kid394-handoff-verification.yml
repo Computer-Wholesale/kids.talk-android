@@ -1,0 +1,145 @@
+name: KID-394 Handoff Verification
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - integration/kid394-handoff-evidence
+      - integration/kid394-qa-remediation
+      - integration/kid394-remediation-hosted
+
+permissions:
+  contents: read
+
+jobs:
+  android-handoff-verification:
+    name: Android handoff gates
+    runs-on: ubuntu-latest
+    timeout-minutes: 75
+
+    steps:
+      - name: Check out integration branch
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 21
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "21"
+          cache: gradle
+
+      - name: Set up Android SDK
+        uses: android-actions/setup-android@v3
+
+      - name: Configure Android build inputs
+        shell: bash
+        run: |
+          set -euo pipefail
+          printf 'sdk.dir=%s\n' "$ANDROID_HOME" > local.properties
+          cat > app/google-services.json <<'EOF'
+          {
+            "project_info": {
+              "project_number": "000000000000",
+              "project_id": "kidstalk-ci-placeholder",
+              "storage_bucket": "kidstalk-ci-placeholder.appspot.com"
+            },
+            "client": [{
+              "client_info": {
+                "mobilesdk_app_id": "1:000000000000:android:0000000000000000",
+                "android_client_info": { "package_name": "com.kidstalk.phone" }
+              },
+              "api_key": [{ "current_key": "ci-placeholder" }],
+              "services": { "appinvite_service": { "other_platform_oauth_client": [] } }
+            }],
+            "configuration_version": "1"
+          }
+          EOF
+          chmod +x gradlew
+
+      - name: Run architect-required handoff gates
+        id: verification
+        shell: bash
+        run: |
+          set -uo pipefail
+          mkdir -p ci-artifacts
+          status=0
+
+          run_gate() {
+            local name="$1"
+            shift
+            echo "::group::${name}"
+            printf '$'
+            printf ' %q' "$@"
+            printf '\n'
+            "$@" 2>&1 | tee "ci-artifacts/${name}.log"
+            local command_status=${PIPESTATUS[0]}
+            echo "${command_status}" > "ci-artifacts/${name}.status"
+            echo "::endgroup::"
+            if [ "${command_status}" -ne 0 ]; then
+              status=1
+            fi
+          }
+
+          summarize_junit() {
+            python3 - <<'PY' | tee ci-artifacts/test_debug_unit.summary
+          from glob import glob
+          from xml.etree import ElementTree as ET
+
+          totals = {"tests": 0, "failures": 0, "errors": 0, "skipped": 0}
+          for path in glob("app/build/test-results/testDebugUnitTest/*.xml"):
+              root = ET.parse(path).getroot()
+              for key in totals:
+                  totals[key] += int(root.attrib.get(key, 0))
+          print(
+              "TEST_DEBUG_UNIT_SUMMARY "
+              + " ".join(f"{key.upper()}={value}" for key, value in totals.items())
+          )
+          PY
+          }
+
+          run_gate tasks_all ./gradlew :app:tasks --all --no-daemon --stacktrace
+          run_gate test_debug_unit ./gradlew :app:testDebugUnitTest --no-daemon --stacktrace
+          summarize_junit
+          run_gate release_merged_manifest ./gradlew :app:processReleaseMainManifest --no-daemon --stacktrace
+          manifest_path=$(find app/build/intermediates -path '*merged_manifest*release*' -name AndroidManifest.xml -print -quit)
+          {
+            audit_status=0
+            echo "RELEASE_MERGED_MANIFEST=${manifest_path}"
+            test -n "${manifest_path}" || audit_status=1
+            ! grep -q 'android.permission.CAMERA' "${manifest_path}" || audit_status=1
+            ! grep -q 'android.permission.FOREGROUND_SERVICE_CAMERA' "${manifest_path}" || audit_status=1
+            ! grep -q 'android.hardware.camera' "${manifest_path}" || audit_status=1
+            grep -q 'android.permission.MANAGE_OWN_CALLS' "${manifest_path}" || audit_status=1
+            grep -q 'android.permission.FOREGROUND_SERVICE_PHONE_CALL' "${manifest_path}" || audit_status=1
+            grep -q 'android.permission.FOREGROUND_SERVICE_MICROPHONE' "${manifest_path}" || audit_status=1
+            grep -q 'foregroundServiceType="phoneCall|microphone"' "${manifest_path}" || audit_status=1
+            exit "${audit_status}"
+          } | tee ci-artifacts/release_merged_manifest_audit.log
+          manifest_audit_status=${PIPESTATUS[0]}
+          echo "${manifest_audit_status}" > ci-artifacts/release_merged_manifest_audit.status
+          if [ "${manifest_audit_status}" -ne 0 ]; then status=1; fi
+          {
+            ! git grep -nE 'sip-linphone:|linphone-sip:|sips-linphone:|linphone-sips:' -- app/src/main/java
+          } | tee ci-artifacts/legacy_uri_alias_audit.log
+          legacy_alias_status=${PIPESTATUS[0]}
+          echo "${legacy_alias_status}" > ci-artifacts/legacy_uri_alias_audit.status
+          if [ "${legacy_alias_status}" -ne 0 ]; then status=1; fi
+          summarize_junit
+          run_gate compile_release_kotlin ./gradlew :app:compileReleaseKotlin --no-daemon --stacktrace
+          run_gate android_lint ./gradlew :app:lint --no-daemon --stacktrace
+          run_gate minify_release_r8 ./gradlew :app:minifyReleaseWithR8 --no-daemon --stacktrace
+
+          exit "${status}"
+
+      - name: Upload complete handoff evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: kid394-handoff-evidence
+          path: |
+            ci-artifacts/
+            app/build/test-results/testDebugUnitTest/
+            app/build/outputs/mapping/release/
+            app/build/reports/lint-results-debug.html
+          if-no-files-found: warn
+          retention-days: 14
