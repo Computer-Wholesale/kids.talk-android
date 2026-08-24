@@ -123,4 +123,13 @@ if [ -z "$checksum_line" ] || [ -z "$java_line" ] || [ "$checksum_line" -ge "$ja
   exit 1
 fi
 
+require_step_literal "Clear signer material before public validation" "if: always()"
+require_step_literal "Clear signer material before public validation" 'rm -rf "$RUNNER_TEMP/kid267-signing"'
+early_cleanup_line=$(grep -nF -- "- name: Clear signer material before public validation" "$workflow" | cut -d: -f1)
+bundle_line=$(grep -nF -- "- name: Build signed release bundle" "$workflow" | cut -d: -f1)
+validation_line=$(grep -nF -- "- name: Validate signed bundle and public certificate fingerprint" "$workflow" | cut -d: -f1)
+if [ -z "$early_cleanup_line" ] || [ -z "$bundle_line" ] || [ -z "$validation_line" ] || [ "$early_cleanup_line" -le "$bundle_line" ] || [ "$early_cleanup_line" -ge "$validation_line" ]; then
+  echo "KID267_PROTECTED_WORKFLOW_FAIL: early signing cleanup must run after bundle and before public validation" >&2
+  exit 1
+fi
 echo "KID267_PROTECTED_WORKFLOW_TESTS=PASS"

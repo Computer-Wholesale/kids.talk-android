@@ -44,4 +44,10 @@ if ! grep -Fq "KIDSTALK_UPLOAD_KEYSTORE_PATH" keystore.properties.example 2>/dev
   exit 1
 fi
 
+for behavioral_literal in ":app:bundleRelease" 'assert_no_release_outputs "$repo_root"' 'assert_no_release_outputs "$unprivileged_repo_root"'; do
+  if ! grep -Fq "$behavioral_literal" scripts/test_kid267_behavioral_preflight.sh; then
+    echo "KID267_SIGNING_CONTRACT_FAIL: behavioral coverage is missing [$behavioral_literal]" >&2
+    exit 1
+  fi
+done
 echo "KID267_SIGNING_CONTRACT_TESTS=PASS"
