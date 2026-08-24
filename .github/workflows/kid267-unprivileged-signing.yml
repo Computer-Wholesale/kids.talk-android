@@ -4,10 +4,12 @@ on:
   pull_request:
     branches:
       - main
+      - release/kid407-uat
   push:
     branches:
       - feature/KID-267-fail-closed-upload-signing
       - main
+      - release/kid407-uat
 
 permissions:
   contents: read
