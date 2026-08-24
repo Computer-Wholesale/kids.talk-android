@@ -56,6 +56,14 @@ python3 scripts/kid407_verify_firebase_contract.py --repository-root . --mode no
 
 Protected UAT configuration is materialised only by the protected CI workflow and is removed unconditionally after the job. It is not a developer bootstrap file.
 
+### Release signing
+
+Release bundles use the organisation-owned Kids.Talk **upload key** under Google Play App Signing. The upload key is not a debug, personal, guessed, temporary, or repository-stored identity. Its keystore, passwords, alias, public fingerprints, and recovery procedure are release-owner custody material and must never be placed in Git, local Gradle properties, build logs, issue comments, or artifacts.
+
+Normal developer builds do not need signing inputs. Release packaging is fail-closed: `:app:kidstalkReleaseSigningPreflight` and release bundle tasks require all four protected input categories documented in [`keystore.properties.example`](keystore.properties.example). The protected release job alone materialises them ephemerally after its release-branch and environment approvals are configured. A missing or unreadable input stops before release bundle packaging and never falls back to debug or unsigned signing.
+
+The real upload key is not generated or imported until the release owner has named the approved vault, primary custodian, independent recovery custodian, and recovery/rotation contact. The verified upload-key SHA-1 from the signed UAT artifact is later supplied to the Firebase owner for the direct-UAT Android-key restriction; Google Play app-signing SHA-1 is recorded separately after the first internal-test upload.
+
 ## Source publication
 
 This repository constitutes the complete corresponding source code for all Kids.Talk Android releases, as required by GPL-3.0. Each tagged release corresponds to a published APK version.
