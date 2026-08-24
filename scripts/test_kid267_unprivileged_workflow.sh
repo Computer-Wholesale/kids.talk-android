@@ -49,4 +49,14 @@ require_absent_literal "actions/upload-artifact"
 require_absent_literal "google-services.json"
 require_absent_literal "protected-uat"
 
+pull_request_branches=$(awk '/^  pull_request:/{capture=1; next} capture && /^  push:/{exit} capture {print}' "$workflow")
+push_branches=$(awk '/^  push:/{capture=1; next} capture && /^permissions:/{exit} capture {print}' "$workflow")
+for trigger_spec in "pull_request:$pull_request_branches" "push:$push_branches"; do
+  trigger_name=${trigger_spec%%:*}
+  trigger_branches=${trigger_spec#*:}
+  if ! printf '%s\n' "$trigger_branches" | grep -Fxq '      - release/kid407-uat'; then
+    echo "KID267_UNPRIVILEGED_WORKFLOW_FAIL: release/kid407-uat is missing from $trigger_name branches" >&2
+    exit 1
+  fi
+done
 echo "KID267_UNPRIVILEGED_WORKFLOW_TESTS=PASS"
