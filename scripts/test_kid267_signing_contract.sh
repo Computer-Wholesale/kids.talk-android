@@ -10,6 +10,8 @@ declare -a required_gradle_literals=(
   "KIDSTALK_UPLOAD_KEYSTORE_PASSWORD"
   "KIDSTALK_UPLOAD_KEY_ALIAS"
   "KIDSTALK_UPLOAD_KEY_PASSWORD"
+  "KIDSTALK_UPLOAD_KEYSTORE_FILE"
+  "isFile && rootProject.file(keystorePath).canRead()"
   "KID267_RELEASE_SIGNING_INPUT_MISSING"
 )
 
@@ -19,6 +21,11 @@ for literal in "${required_gradle_literals[@]}"; do
     exit 1
   fi
 done
+
+if [ ! -x scripts/test_kid267_behavioral_preflight.sh ]; then
+  echo "KID267_SIGNING_CONTRACT_FAIL: executed behavioral preflight coverage is absent" >&2
+  exit 1
+fi
 
 if git ls-files --error-unmatch keystore.properties >/dev/null 2>&1; then
   echo "KID267_SIGNING_CONTRACT_FAIL: root keystore.properties remains tracked" >&2

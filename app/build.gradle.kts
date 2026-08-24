@@ -140,7 +140,7 @@ android {
     fun requireKidstalkReleaseSigningInputs() {
         val categoriesMissing = releaseSigningInputCategoriesMissing.toMutableList()
         val keystorePath = releaseSigningInputs["KIDSTALK_UPLOAD_KEYSTORE_PATH"]
-        if (!keystorePath.isNullOrBlank() && !rootProject.file(keystorePath).isFile) {
+        if (!keystorePath.isNullOrBlank() && !(rootProject.file(keystorePath).isFile && rootProject.file(keystorePath).canRead())) {
             categoriesMissing += "KIDSTALK_UPLOAD_KEYSTORE_FILE"
         }
         if (categoriesMissing.isNotEmpty()) {
