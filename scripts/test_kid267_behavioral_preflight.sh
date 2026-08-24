@@ -1,0 +1,170 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+repo_root=$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)
+cd "$repo_root"
+
+: "${ANDROID_HOME:?KID267_BEHAVIORAL_PREFLIGHT_FAIL: ANDROID_HOME must be configured}"
+
+test_root=$(mktemp -d /tmp/kid267-behavioral-preflight-XXXXXX)
+keystore_path="$test_root/ephemeral-upload-key.jks"
+unreadable_keystore_path="$test_root/unreadable-upload-key.jks"
+nonregular_keystore_path="$test_root/nonregular-upload-key.jks"
+unprivileged_repo_root="$test_root/unprivileged-source"
+unprivileged_home="$test_root/nobody-home"
+store_password=$(od -An -N 24 -tx1 /dev/urandom | tr -d ' \n')
+key_password=$(od -An -N 24 -tx1 /dev/urandom | tr -d ' \n')
+key_alias=kid267_ephemeral_upload_alias
+
+bundle_args=(
+  --no-daemon
+  --max-workers=1
+  -Dorg.gradle.jvmargs=-Xmx1536m
+  -Dkotlin.compiler.execution.strategy=in-process
+  --console=plain
+  :app:bundleRelease
+)
+preflight_args=(
+  --no-daemon
+  --max-workers=1
+  -Dorg.gradle.jvmargs=-Xmx1536m
+  -Dkotlin.compiler.execution.strategy=in-process
+  --console=plain
+  :app:kidstalkReleaseSigningPreflight
+)
+
+clear_release_outputs() {
+  local worktree=$1
+  rm -f "$worktree/app/build/outputs/bundle/release"/*.aab
+  rm -f "$worktree/app/build/outputs/mapping/release/mapping.txt"
+}
+
+assert_no_release_outputs() {
+  local worktree=$1
+  local aab_dir="$worktree/app/build/outputs/bundle/release"
+  local mapping_path="$worktree/app/build/outputs/mapping/release/mapping.txt"
+  if find "$aab_dir" -maxdepth 1 -type f -name '*.aab' -print -quit 2>/dev/null | grep -q .; then
+    echo "KID267_BEHAVIORAL_PREFLIGHT_FAIL: release AAB exists after rejected signer input in [$worktree]" >&2
+    exit 1
+  fi
+  if [ -e "$mapping_path" ]; then
+    echo "KID267_BEHAVIORAL_PREFLIGHT_FAIL: release mapping exists after rejected signer input in [$worktree]" >&2
+    exit 1
+  fi
+}
+
+expect_failure_category() {
+  local expected_category=$1
+  shift
+  local output
+  local status
+  set +e
+  output=$("$@" 2>&1)
+  status=$?
+  set -e
+  if [ "$status" -eq 0 ]; then
+    echo "KID267_BEHAVIORAL_PREFLIGHT_FAIL: rejected signer input unexpectedly passed" >&2
+    exit 1
+  fi
+  if ! printf '%s\n' "$output" | grep -Fq "$expected_category"; then
+    printf '%s\n' "$output" | tail -n 40 >&2
+    echo "KID267_BEHAVIORAL_PREFLIGHT_FAIL: expected category [$expected_category] was not returned" >&2
+    exit 1
+  fi
+}
+
+run_root_gradle() {
+  local task_args=("$@")
+  sh -c 'cd "$1" && shift && exec ./gradlew "$@"' sh "$repo_root" "${task_args[@]}"
+}
+
+run_unprivileged_bundle_release() {
+  if ! command -v sudo >/dev/null 2>&1; then
+    echo "KID267_BEHAVIORAL_PREFLIGHT_FAIL: sudo is required for unreadable-input coverage" >&2
+    exit 1
+  fi
+  sudo -n -u nobody env \
+    HOME="$unprivileged_home" \
+    GRADLE_USER_HOME="$unprivileged_home/gradle" \
+    ANDROID_HOME="$ANDROID_HOME" \
+    PATH="$PATH" \
+    KIDSTALK_UPLOAD_KEYSTORE_PATH="$unreadable_keystore_path" \
+    KIDSTALK_UPLOAD_KEYSTORE_PASSWORD="$store_password" \
+    KIDSTALK_UPLOAD_KEY_ALIAS="$key_alias" \
+    KIDSTALK_UPLOAD_KEY_PASSWORD="$key_password" \
+    sh -c 'cd "$1" && shift && exec ./gradlew "$@"' sh "$unprivileged_repo_root" "${bundle_args[@]}"
+}
+
+cleanup() {
+  clear_release_outputs "$repo_root"
+  if command -v sudo >/dev/null 2>&1; then
+    sudo -n rm -rf "$test_root"
+  else
+    rm -rf "$test_root"
+  fi
+  unset store_password key_password
+}
+trap cleanup EXIT
+
+clear_release_outputs "$repo_root"
+expect_failure_category "KID267_RELEASE_SIGNING_INPUT_MISSING:" \
+  env -u KIDSTALK_UPLOAD_KEYSTORE_PATH \
+    -u KIDSTALK_UPLOAD_KEYSTORE_PASSWORD \
+    -u KIDSTALK_UPLOAD_KEY_ALIAS \
+    -u KIDSTALK_UPLOAD_KEY_PASSWORD \
+    sh -c 'cd "$1" && shift && exec ./gradlew "$@"' sh "$repo_root" "${bundle_args[@]}"
+assert_no_release_outputs "$repo_root"
+
+keytool \
+  -genkeypair \
+  -keystore "$unreadable_keystore_path" \
+  -storepass "$store_password" \
+  -alias "$key_alias" \
+  -keypass "$key_password" \
+  -keyalg RSA \
+  -keysize 2048 \
+  -validity 1 \
+  -dname "CN=KID-267 Ephemeral Test,O=Kids.Talk,C=AU" \
+  >/dev/null 2>&1
+chmod 000 "$unreadable_keystore_path"
+mkdir -p "$unprivileged_home"
+sudo -n chown -R nobody:nogroup "$unprivileged_home"
+cp -a "$repo_root" "$unprivileged_repo_root"
+printf 'sdk.dir=%s\n' "$ANDROID_HOME" > "$unprivileged_repo_root/local.properties"
+sudo -n chown -R nobody:nogroup "$unprivileged_repo_root"
+chmod 755 "$test_root"
+clear_release_outputs "$unprivileged_repo_root"
+expect_failure_category "KID267_RELEASE_SIGNING_INPUT_MISSING: KIDSTALK_UPLOAD_KEYSTORE_FILE" run_unprivileged_bundle_release
+assert_no_release_outputs "$unprivileged_repo_root"
+
+ln -s /dev/null "$nonregular_keystore_path"
+clear_release_outputs "$repo_root"
+expect_failure_category "KID267_RELEASE_SIGNING_INPUT_MISSING: KIDSTALK_UPLOAD_KEYSTORE_FILE" \
+  env \
+    KIDSTALK_UPLOAD_KEYSTORE_PATH="$nonregular_keystore_path" \
+    KIDSTALK_UPLOAD_KEYSTORE_PASSWORD="$store_password" \
+    KIDSTALK_UPLOAD_KEY_ALIAS="$key_alias" \
+    KIDSTALK_UPLOAD_KEY_PASSWORD="$key_password" \
+    sh -c 'cd "$1" && shift && exec ./gradlew "$@"' sh "$repo_root" "${bundle_args[@]}"
+assert_no_release_outputs "$repo_root"
+
+keytool \
+  -genkeypair \
+  -keystore "$keystore_path" \
+  -storepass "$store_password" \
+  -alias "$key_alias" \
+  -keypass "$key_password" \
+  -keyalg RSA \
+  -keysize 2048 \
+  -validity 1 \
+  -dname "CN=KID-267 Ephemeral Test,O=Kids.Talk,C=AU" \
+  >/dev/null 2>&1
+env \
+  KIDSTALK_UPLOAD_KEYSTORE_PATH="$keystore_path" \
+  KIDSTALK_UPLOAD_KEYSTORE_PASSWORD="$store_password" \
+  KIDSTALK_UPLOAD_KEY_ALIAS="$key_alias" \
+  KIDSTALK_UPLOAD_KEY_PASSWORD="$key_password" \
+  ./gradlew "${preflight_args[@]}"
+assert_no_release_outputs "$repo_root"
+
+echo "KID267_BEHAVIORAL_PREFLIGHT_TESTS=PASS"

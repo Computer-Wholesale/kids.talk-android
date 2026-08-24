@@ -1,0 +1,176 @@
+name: KID-267 Protected Release Signing
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+env:
+  BUNDLETOOL_VERSION: "1.18.0"
+  BUNDLETOOL_SHA256: "78343764d2e79c8f55710378b04981fcb1e46daebfc3b5dc577778082e6a98fd"
+
+jobs:
+  validate-release-ref:
+    name: Validate protected release ref
+    runs-on: ubuntu-latest
+    steps:
+      - name: Refuse non-release dispatches before secret access
+        env:
+          EXPECTED_REF: refs/heads/release/kid407-uat
+        run: |
+          set -euo pipefail
+          if [ "$GITHUB_REF" != "$EXPECTED_REF" ]; then
+            echo "KID267_RELEASE_REF_INVALID"
+            exit 1
+          fi
+
+  signed-release-verification:
+    name: Build and verify protected signed release
+    needs: validate-release-ref
+    runs-on: ubuntu-latest
+    environment: protected-uat
+    steps:
+      - name: Check out immutable dispatched revision
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.sha }}
+          fetch-depth: 0
+
+      - name: Set up JDK 21
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+
+      - name: Materialise and preflight protected upload-key inputs
+        env:
+          KIDSTALK_UPLOAD_KEYSTORE_B64: ${{ secrets.KIDSTALK_UPLOAD_KEYSTORE_B64 }}
+          KIDSTALK_UPLOAD_KEYSTORE_PASSWORD: ${{ secrets.KIDSTALK_UPLOAD_KEYSTORE_PASSWORD }}
+          KIDSTALK_UPLOAD_KEY_ALIAS: ${{ secrets.KIDSTALK_UPLOAD_KEY_ALIAS }}
+          KIDSTALK_UPLOAD_KEY_PASSWORD: ${{ secrets.KIDSTALK_UPLOAD_KEY_PASSWORD }}
+        run: |
+          set -euo pipefail
+          set +x
+          for category in \
+            KIDSTALK_UPLOAD_KEYSTORE_B64 \
+            KIDSTALK_UPLOAD_KEYSTORE_PASSWORD \
+            KIDSTALK_UPLOAD_KEY_ALIAS \
+            KIDSTALK_UPLOAD_KEY_PASSWORD; do
+            if [ -z "${!category:-}" ]; then
+              echo "KID267_RELEASE_SIGNING_INPUT_MISSING:$category"
+              exit 1
+            fi
+          done
+          signing_dir="$RUNNER_TEMP/kid267-signing"
+          rm -rf "$signing_dir"
+          mkdir -p "$signing_dir"
+          umask 077
+          keystore_path="$signing_dir/upload-key.jks"
+          cleanup() {
+            rm -rf "$signing_dir"
+          }
+          trap cleanup ERR
+          printf '%s' "$KIDSTALK_UPLOAD_KEYSTORE_B64" | base64 --decode > "$keystore_path"
+          if [ ! -s "$keystore_path" ]; then
+            echo "KID267_RELEASE_SIGNING_INPUT_MISSING:KIDSTALK_UPLOAD_KEYSTORE_FILE"
+            exit 1
+          fi
+          KIDSTALK_UPLOAD_KEYSTORE_PATH="$keystore_path" \
+          ./gradlew --no-daemon --max-workers=1 :app:kidstalkReleaseSigningPreflight
+
+      - name: Run non-signing release gates
+        run: |
+          set -euo pipefail
+          ./gradlew --no-daemon --max-workers=1 \
+            testDebugUnitTest \
+            :app:compileReleaseKotlin \
+            :app:lintRelease \
+            :app:processReleaseMainManifest \
+            :app:minifyReleaseWithR8
+
+      - name: Build signed release bundle
+        env:
+          KIDSTALK_UPLOAD_KEYSTORE_PATH: ${{ runner.temp }}/kid267-signing/upload-key.jks
+          KIDSTALK_UPLOAD_KEYSTORE_PASSWORD: ${{ secrets.KIDSTALK_UPLOAD_KEYSTORE_PASSWORD }}
+          KIDSTALK_UPLOAD_KEY_ALIAS: ${{ secrets.KIDSTALK_UPLOAD_KEY_ALIAS }}
+          KIDSTALK_UPLOAD_KEY_PASSWORD: ${{ secrets.KIDSTALK_UPLOAD_KEY_PASSWORD }}
+        run: |
+          set -euo pipefail
+          set +x
+          ./gradlew --no-daemon --max-workers=1 :app:bundleRelease
+
+      - name: Clear signer material before public validation
+        if: always()
+        run: |
+          set -euo pipefail
+          rm -rf "$RUNNER_TEMP/kid267-signing"
+
+      - name: Validate signed bundle and public certificate fingerprint
+        id: provenance
+        env:
+          KIDSTALK_UPLOAD_KEY_CERT_SHA256: ${{ vars.KIDSTALK_UPLOAD_KEY_CERT_SHA256 }}
+        run: |
+          set -euo pipefail
+          if [ -z "${KIDSTALK_UPLOAD_KEY_CERT_SHA256:-}" ]; then
+            echo "KID267_RELEASE_SIGNING_INPUT_MISSING:KIDSTALK_UPLOAD_KEY_CERT_SHA256"
+            exit 1
+          fi
+          bundletool_path="$RUNNER_TEMP/bundletool.jar"
+          curl --fail --silent --show-error --location \
+            "https://github.com/google/bundletool/releases/download/${BUNDLETOOL_VERSION}/bundletool-all-${BUNDLETOOL_VERSION}.jar" \
+            --output "$bundletool_path"
+          printf '%s  %s\n' "$BUNDLETOOL_SHA256" "$bundletool_path" | sha256sum --check --status
+          aab_path=$(find app/build/outputs/bundle/release -maxdepth 1 -type f -name '*.aab' -print -quit)
+          mapping_path=app/build/outputs/mapping/release/mapping.txt
+          if [ -z "$aab_path" ] || [ ! -f "$mapping_path" ]; then
+            echo "KID267_RELEASE_OUTPUT_MISSING"
+            exit 1
+          fi
+          java -jar "$RUNNER_TEMP/bundletool.jar" validate --bundle "$aab_path"
+          jarsigner -verify -strict -certs "$aab_path"
+          actual_fingerprint=$(keytool -printcert -jarfile "$aab_path" | awk -F': ' '/SHA256:/{print $2; exit}')
+          expected_fingerprint=$(printf '%s' "$KIDSTALK_UPLOAD_KEY_CERT_SHA256" | tr -d ':' | tr '[:lower:]' '[:upper:]')
+          actual_normalized=$(printf '%s' "$actual_fingerprint" | tr -d ':' | tr '[:lower:]' '[:upper:]')
+          if [ -z "$actual_normalized" ] || [ "$actual_normalized" != "$expected_fingerprint" ]; then
+            echo "KID267_RELEASE_CERTIFICATE_MISMATCH"
+            exit 1
+          fi
+          aab_sha256=$(sha256sum "$aab_path" | awk '{print $1}')
+          mapping_sha256=$(sha256sum "$mapping_path" | awk '{print $1}')
+          version_code=$(awk '/versionCode =/{print $3; exit}' app/build.gradle.kts)
+          version_name=$(awk -F'"' '/versionName =/{print $2; exit}' app/build.gradle.kts)
+          provenance_path="$RUNNER_TEMP/kid267-release-provenance.json"
+          cat > "$provenance_path" <<EOF
+          {
+            "git_sha": "${GITHUB_SHA}",
+            "package_name": "com.kidstalk.phone",
+            "version_code": "${version_code}",
+            "version_name": "${version_name}",
+            "aab_sha256": "${aab_sha256}",
+            "mapping_sha256": "${mapping_sha256}",
+            "signing_certificate_sha256": "${actual_normalized}"
+          }
+          EOF
+          printf '%s\n' "aab_path=$aab_path" >> "$GITHUB_OUTPUT"
+          printf '%s\n' "mapping_path=$mapping_path" >> "$GITHUB_OUTPUT"
+          printf '%s\n' "provenance_path=$provenance_path" >> "$GITHUB_OUTPUT"
+
+      - name: Upload restricted release provenance and artifacts
+        if: success()
+        uses: actions/upload-artifact@v4
+        with:
+          name: kid267-signed-release-${{ github.sha }}
+          path: |
+            ${{ steps.provenance.outputs.aab_path }}
+            ${{ steps.provenance.outputs.mapping_path }}
+            ${{ steps.provenance.outputs.provenance_path }}
+          if-no-files-found: error
+          retention-days: 1
+
+      - name: Remove ephemeral protected material
+        if: always()
+        run: |
+          set -euo pipefail
+          rm -rf "$RUNNER_TEMP/kid267-signing"
+          rm -f "$RUNNER_TEMP/bundletool.jar" "$RUNNER_TEMP/kid267-release-provenance.json"

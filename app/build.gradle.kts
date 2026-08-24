@@ -3,8 +3,6 @@ import com.google.firebase.crashlytics.buildtools.gradle.CrashlyticsExtension
 import com.google.firebase.crashlytics.buildtools.gradle.CrashlyticsPlugin
 import com.google.gms.googleservices.GoogleServicesPlugin
 import java.io.BufferedReader
-import java.io.FileInputStream
-import java.util.Properties
 
 plugins {
     alias(libs.plugins.androidApplication)
@@ -127,23 +125,56 @@ android {
             }
     }
 
-    val keystorePropertiesFile = rootProject.file("keystore.properties")
-    val keystoreProperties = Properties()
-    keystoreProperties.load(FileInputStream(keystorePropertiesFile))
+    val releaseSigningInputs = mapOf(
+        "KIDSTALK_UPLOAD_KEYSTORE_PATH" to providers.environmentVariable("KIDSTALK_UPLOAD_KEYSTORE_PATH").orNull,
+        "KIDSTALK_UPLOAD_KEYSTORE_PASSWORD" to providers.environmentVariable("KIDSTALK_UPLOAD_KEYSTORE_PASSWORD").orNull,
+        "KIDSTALK_UPLOAD_KEY_ALIAS" to providers.environmentVariable("KIDSTALK_UPLOAD_KEY_ALIAS").orNull,
+        "KIDSTALK_UPLOAD_KEY_PASSWORD" to providers.environmentVariable("KIDSTALK_UPLOAD_KEY_PASSWORD").orNull,
+    )
+
+    val releaseSigningInputCategoriesMissing = releaseSigningInputs
+        .filterValues { it.isNullOrBlank() }
+        .keys
+        .toList()
+
+    fun requireKidstalkReleaseSigningInputs() {
+        val categoriesMissing = releaseSigningInputCategoriesMissing.toMutableList()
+        val keystorePath = releaseSigningInputs["KIDSTALK_UPLOAD_KEYSTORE_PATH"]
+        if (!keystorePath.isNullOrBlank() && !(rootProject.file(keystorePath).isFile && rootProject.file(keystorePath).canRead())) {
+            categoriesMissing += "KIDSTALK_UPLOAD_KEYSTORE_FILE"
+        }
+        if (categoriesMissing.isNotEmpty()) {
+            throw GradleException(
+                "KID267_RELEASE_SIGNING_INPUT_MISSING: ${categoriesMissing.sorted().joinToString(",")}",
+            )
+        }
+    }
 
     signingConfigs {
         create("release") {
-            val keyStorePath = keystoreProperties["storeFile"] as String
-            val keyStore = project.file(keyStorePath)
-            if (keyStore.exists()) {
-                storeFile = keyStore
-                storePassword = keystoreProperties["storePassword"] as String
-                keyAlias = keystoreProperties["keyAlias"] as String
-                keyPassword = keystoreProperties["keyPassword"] as String
-                println("Signing config release is using keystore [$storeFile]")
-            } else {
-                println("Keystore [$storeFile] doesn't exists!")
+            if (releaseSigningInputCategoriesMissing.isEmpty()) {
+                storeFile = rootProject.file(releaseSigningInputs.getValue("KIDSTALK_UPLOAD_KEYSTORE_PATH").orEmpty())
+                storePassword = releaseSigningInputs.getValue("KIDSTALK_UPLOAD_KEYSTORE_PASSWORD")
+                keyAlias = releaseSigningInputs.getValue("KIDSTALK_UPLOAD_KEY_ALIAS")
+                keyPassword = releaseSigningInputs.getValue("KIDSTALK_UPLOAD_KEY_PASSWORD")
             }
+        }
+    }
+
+    project.tasks.register("kidstalkReleaseSigningPreflight") {
+        group = "verification"
+        description = "Fails closed unless protected upload-key signing inputs are present."
+        doLast {
+            requireKidstalkReleaseSigningInputs()
+        }
+    }
+
+    project.gradle.taskGraph.whenReady {
+        val releasePackagingRequested = allTasks.any { task ->
+            task.path.startsWith(":app:") && task.name in setOf("bundleRelease", "assembleRelease", "packageRelease")
+        }
+        if (releasePackagingRequested) {
+            requireKidstalkReleaseSigningInputs()
         }
     }
 
