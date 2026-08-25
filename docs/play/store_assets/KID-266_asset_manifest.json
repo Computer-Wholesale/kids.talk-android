@@ -1,0 +1,14 @@
+{
+  "schema_version": 1,
+  "ticket": "KID-266",
+  "status": "incomplete",
+  "candidate_evidence": {
+    "status": "pending",
+    "aab_sha256": "PENDING",
+    "version_name": "PENDING",
+    "version_code": "PENDING",
+    "evidence_ref": "PENDING"
+  },
+  "claims": [],
+  "assets": []
+}
