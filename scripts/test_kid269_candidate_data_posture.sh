@@ -55,6 +55,7 @@ require_inventory_component() {
     "Release activation condition" \
     "Initialization / manifest proof" \
     "Candidate disposition" \
+    "Proof source" \
     "Data categories / purposes" \
     "Data Safety owner / effect" \
     "Privacy-policy owner / effect" \
@@ -87,6 +88,7 @@ require_source_literal "${version_catalog}" "openid-appauth = { group = \"net.op
 require_source_literal "${manifest_path}" "org.linphone.core.tools.firebase.FirebaseMessaging" "Firebase Messaging manifest service"
 
 if [[ -f "${inventory_path}" ]]; then
+  require_inventory_component "Google Services Gradle Plugin"
   require_inventory_component "Firebase Crashlytics NDK"
   require_inventory_component "Firebase Cloud Messaging"
   require_inventory_component "Linphone SDK Android"
