@@ -104,6 +104,9 @@ This ledger contains no client configuration values, API keys, service-account m
 | `./gradlew :app:dependencyInsight --dependency firebase-crashlytics --configuration releaseCompileClasspath` | Passed; selected Crashlytics and Crashlytics NDK `20.0.6`. | Establishes local compile-classpath presence only. |
 | `./gradlew :app:dependencyInsight --dependency firebase-messaging --configuration releaseRuntimeClasspath` | Passed; selected Firebase Messaging `25.1.0`. | Local runtime dependency evidence only. |
 | `./gradlew :app:dependencyInsight --dependency appauth --configuration releaseRuntimeClasspath` | Passed; selected AppAuth `0.11.1`. | Local runtime dependency evidence only. |
+| `./gradlew :app:testDebugUnitTest` | Failed. | Sandbox lacks Android SDK configuration: neither `ANDROID_HOME` nor `local.properties` `sdk.dir` is set. No unit tests executed. |
+| `./gradlew :app:assembleRelease` | Failed. | The same missing Android SDK location blocked release task dependency resolution before signing or artifact generation. No APK/AAB was generated. |
+| `bash scripts/test_kid407_firebase_contract.sh` | Passed: `KID407_FIREBASE_CONTRACT_TESTS=PASS`. | Existing redacted contract test passed; it does not prove protected candidate binding or sender delivery. |
 | `./gradlew :app:processReleaseManifest` | Failed. | Blocked by unresolved Linphone SDK coordinate; no merged release manifest was generated. |
 
 ## Explicitly unsupported claims
