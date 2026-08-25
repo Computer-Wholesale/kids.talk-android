@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
-# KID-263 focused evidence validator. It validates the ledger's completeness,
-# not live deletion behavior or a signed-candidate claim.
+# KID-263 focused evidence validator. It validates the ledger's completeness
+# and claim boundaries; it does not execute live deletion or candidate tests.
 set -euo pipefail
 
 ledger="${1:-docs/play/KID-263_Account_Lifecycle_Evidence_Ledger.md}"
@@ -26,6 +26,7 @@ require() {
 
 require 'Android base:' 'Android base identity'
 require 'Portal dependency base:' 'portal dependency base identity'
+require '## Evidence references' 'evidence-reference section'
 require '## Lifecycle evidence matrix' 'lifecycle evidence matrix'
 require '## Shared-fact reconciliation' 'shared-fact reconciliation section'
 require '## Decision and acceptance state' 'decision and acceptance state'
@@ -37,7 +38,7 @@ for flow in L1 L2 L3 L4 L5 L6 L7; do
   fi
 done
 
-for ticket in KID-264 KID-265 KID-279 KID-414 KID-413; do
+for ticket in KID-264 KID-265 KID-267 KID-279 KID-414 KID-413; do
   require "$ticket" "${ticket} reconciliation entry"
 done
 
@@ -49,12 +50,15 @@ if grep -Eq '\*\*(Lifecycle conclusion|Functional deletion conclusion|Exact cand
   fail 'a required conclusion remains PENDING'
 fi
 
-if grep -Fqi 'functional deletion.*proven' "$ledger" && ! grep -Fq 'exact signed candidate' "$ledger"; then
-  fail 'functional-deletion claim is not tied to exact-candidate evidence'
-fi
+require 'INDETERMINATE FOR PLAY-POLICY CLASSIFICATION' 'bounded lifecycle conclusion'
+require 'Functional deletion conclusion:** NOT PROVEN' 'non-functional deletion conclusion'
+require 'Exact candidate:** EXTERNAL GATE' 'exact-candidate external gate'
+require 'Release acceptance:** BLOCKED' 'release-acceptance blocker'
+require 'No local wipe is proposed or evidenced' 'local-wipe prohibition'
+require 'no live-site access or production deletion was attempted' 'live-operation boundary'
 
-if grep -Fqi 'background' "$ledger" || grep -Fqi 'FCM wake' "$ledger" || grep -Fqi 'encryption in transit' "$ledger"; then
-  fail 'ledger contains an out-of-scope unsupported transport, wake, or background claim'
+if grep -Fqi 'functional deletion conclusion:** proven' "$ledger"; then
+  fail 'unsupported functional-deletion conclusion'
 fi
 
 if (( failures > 0 )); then
