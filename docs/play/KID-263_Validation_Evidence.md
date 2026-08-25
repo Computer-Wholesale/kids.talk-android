@@ -3,6 +3,9 @@
 **Branch:** `feature/KID-263-account-lifecycle-evidence`  
 **Android base:** `669d70a9885efb89ddf014be7944319ecce86e17`  
 **Green evidence commit:** `a6047447124897fb2cafe353e9d58adc5ef7890d`  
+**Validation-evidence commit:** `191e501faa4662ecc1a1d1aeb46ef94bddda1052`
+**Final rebased head:** `191e501faa4662ecc1a1d1aeb46ef94bddda1052`
+**Rebase result:** `git fetch origin main && git rebase origin/main` reported the branch was already current; merge base remained `669d70a9885efb89ddf014be7944319ecce86e17`.
 **Execution date:** 2026-08-25
 
 ## Scope and safety posture
@@ -25,7 +28,7 @@ This record validates the KID-263 **current-source evidence ledger**, not functi
 | `./gradlew assembleDebug --console=plain` | **BLOCKED / exit 1** | Same missing Android SDK location; Gradle failed while determining dependencies for `:app:compileDebugJavaWithJavac`. No debug artifact was produced. |
 | `./gradlew bundleRelease --console=plain` | **BLOCKED / exit 1** | Same missing Android SDK location; Gradle failed while determining dependencies for `:app:minifyReleaseWithR8`. No release bundle was produced and no signing material was accessed. |
 
-The sandbox contains no discoverable Android SDK under `/opt`, `/usr/local`, or `/home/ubuntu`; `ANDROID_HOME` is unset and the repository has no `local.properties` SDK path. This is an environment blocker, not a Green Android build result and not a basis for a release claim.
+The sandbox contains no discoverable Android SDK under `/opt`, `/usr/local`, or `/home/ubuntu`; `ANDROID_HOME` is unset and the repository has no `local.properties` SDK path. This is an environment blocker, not a Green Android build result and not a basis for a release claim. After rebasing, the focused validator passed again and all three Android Gradle commands were re-run against the final head; each remained blocked by the same missing SDK location before test execution or artifact production.
 
 ## Candidate and dependency status
 
