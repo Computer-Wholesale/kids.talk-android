@@ -35,7 +35,8 @@ openidAppauth = "0.11.1"
 # Pinned per KID-392 architect ruling: use the exact alpha currently resolving.
 # Do NOT use a floating range — the 5.6 line is entirely pre-release (no stable 5.6.0 exists).
 # Migration to 5.5.x stable is out of scope; revisit when Belledonne publishes 5.6.0.
-linphone = "5.6.0-alpha.28+a101d0cb15"
+# alpha.28 metadata, POM, and AAR are unavailable.
+linphone = "5.6.0-alpha.64+2de96c4358"
 junit = "4.13.2"
 mockk = "1.13.13"
 
