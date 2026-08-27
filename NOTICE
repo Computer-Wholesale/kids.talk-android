@@ -1,0 +1,21 @@
+Kids.Talk Android
+Copyright © 2026 Computer Wholesale
+
+This product includes software developed by Belledonne Communications
+(https://www.belledonne-communications.com) and is a fork of the
+Linphone Android project.
+
+Upstream Linphone Android
+Copyright © 2010-2025 Belledonne Communications
+Licensed under the GNU General Public License v3.0
+
+This product also includes software from the Android Open Source Project
+and various third-party libraries:
+
+- AndroidX Libraries (Apache License 2.0)
+- Firebase Cloud Messaging (Apache License 2.0)
+- Kotlin Standard Library (Apache License 2.0)
+- Material Components for Android (Apache License 2.0)
+
+For the complete text of the GNU General Public License v3.0, see
+the LICENSE.txt file included with this distribution.

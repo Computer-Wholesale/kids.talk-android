@@ -1,8 +1,8 @@
 # Kids.Talk Android
 
-A supervised VoIP calling app for children, built on [Linphone Android](https://github.com/BelledonneCommunications/linphone-android).
+A supervised VoIP calling app for adult guardians and grandparents, built on [Linphone Android](https://github.com/BelledonneCommunications/linphone-android).
 
-Kids.Talk is a locked-down SIP dialler designed for supervised use by children. It provides a single large call button, guided permission setup, and no access to messaging, contacts, or call history. It connects to the Kids.Talk managed PBX service.
+Kids.Talk is a locked-down SIP dialler designed for use by guardians and grandparents to communicate with the Kids.Talk physical handset. It provides a single large call button, guided permission setup, and no access to messaging, contacts, or call history. It connects to the Kids.Talk managed PBX service.
 
 ## Features
 
